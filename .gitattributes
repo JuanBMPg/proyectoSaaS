@@ -1,0 +1,5 @@
+# Normaliza los finales de línea: LF en el repositorio, aunque se trabaje en Windows
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+mvnw text eol=lf
