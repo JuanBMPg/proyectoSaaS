@@ -1,3 +1,49 @@
 spring:
   application:
     name: reservas
+
+  # En local lee el .env de la raíz del repo (o del directorio actual).
+  # En Docker o en producción las variables llegan como variables de entorno reales.
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:reservas}
+    username: ${DB_USERNAME:reservas}
+    password: ${DB_PASSWORD:}
+
+  jpa:
+    # Flyway es el único dueño del esquema; Hibernate solo comprueba que coincide
+    hibernate:
+      ddl-auto: validate
+    # Evita consultas perezosas ocultas durante el renderizado de la respuesta
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    locations: classpath:db/migration
+
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+# Configuración propia de la aplicación (ver config/AppProperties)
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
+  mail:
+    from: ${MAIL_FROM:no-responder@reservas.local}

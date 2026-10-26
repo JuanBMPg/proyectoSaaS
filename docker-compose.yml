@@ -1,0 +1,39 @@
+# Servicios de infraestructura para desarrollo local.
+# Uso: copia .env.example a .env y ejecuta `docker compose up -d`.
+# El backend y el frontend se añadirán aquí cuando tengan su Dockerfile.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: reservas-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-reservas}
+      POSTGRES_USER: ${DB_USERNAME:-reservas}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en el fichero .env}
+      # Coherente con la regla del proyecto: todo instante en UTC
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: reservas-mailpit
+    ports:
+      - "${MAIL_PORT:-1025}:1025"   # SMTP: aquí envía el backend
+      - "${MAILPIT_UI_PORT:-8025}:8025"   # Interfaz web para ver los emails
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:
