@@ -46,16 +46,39 @@ describe('AuthService', () => {
     expect(recibidos).toEqual(['token-nuevo', 'token-nuevo']);
   });
 
-  it('restaurarSesion no falla si no hay sesión que recuperar', () => {
-    let completado = false;
-    servicio.restaurarSesion().subscribe({ complete: () => (completado = true) });
+  it('comprobarSesion recupera la sesión con la cookie del refresh token', () => {
+    let haySesion: boolean | undefined;
+    servicio.comprobarSesion().subscribe((resultado) => (haySesion = resultado));
 
+    http.expectOne('/api/auth/refresh').flush(respuestaToken(jwtFalso()));
+
+    expect(haySesion).toBe(true);
+    expect(servicio.autenticado()).toBe(true);
+  });
+
+  it('comprobarSesion responde false si no hay sesión y no vuelve a intentarlo', () => {
+    let haySesion: boolean | undefined;
+    servicio.comprobarSesion().subscribe((resultado) => (haySesion = resultado));
     http
       .expectOne('/api/auth/refresh')
       .flush({ status: 401 }, { status: 401, statusText: 'Unauthorized' });
+    expect(haySesion).toBe(false);
 
-    expect(completado).toBe(true);
-    expect(servicio.autenticado()).toBe(false);
+    // Segunda comprobación: ya se sabe que no hay sesión, no se repite la llamada
+    servicio.comprobarSesion().subscribe((resultado) => (haySesion = resultado));
+    http.expectNone('/api/auth/refresh');
+    expect(haySesion).toBe(false);
+  });
+
+  it('comprobarSesion no llama al servidor si ya hay token en memoria', () => {
+    servicio.login({ email: 'lola@example.com', password: 'secreta123' }).subscribe();
+    http.expectOne('/api/auth/login').flush(respuestaToken(jwtFalso()));
+
+    let haySesion: boolean | undefined;
+    servicio.comprobarSesion().subscribe((resultado) => (haySesion = resultado));
+
+    http.expectNone('/api/auth/refresh');
+    expect(haySesion).toBe(true);
   });
 
   it('el logout limpia la sesión y vuelve al login aunque el servidor falle', () => {
