@@ -11,7 +11,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.Clock;
-import java.time.Instant;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,8 +22,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.jayway.jsonpath.JsonPath;
 import com.juan.reservas.SesionDePrueba;
 import com.juan.reservas.TestDeIntegracion;
-import com.juan.reservas.auth.Rol;
-import com.juan.reservas.auth.Usuario;
 import com.juan.reservas.auth.UsuarioRepository;
 import com.juan.reservas.negocio.NegocioRepository;
 
@@ -133,17 +130,7 @@ class ServicioIntegrationTest {
     void unEmpleadoNoPuedeGestionarServicios(
             @Autowired NegocioRepository negocios, @Autowired UsuarioRepository usuarios,
             @Autowired PasswordEncoder passwordEncoder, @Autowired Clock clock) throws Exception {
-        String emailEmpleado = "empleado-" + lola.email();
-        usuarios.save(new Usuario(negocios.findBySlug(lola.slug()).orElseThrow(), emailEmpleado,
-                passwordEncoder.encode(SesionDePrueba.PASSWORD), "Marta", Rol.EMPLEADO, Instant.now(clock)));
-        String respuesta = mvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"email": "%s", "password": "%s"}
-                                """.formatted(emailEmpleado, SesionDePrueba.PASSWORD)))
-                .andReturn().getResponse().getContentAsString();
-        SesionDePrueba empleado = new SesionDePrueba(JsonPath.read(respuesta, "$.accessToken"), lola.slug(),
-                emailEmpleado);
+        SesionDePrueba empleado = lola.crearEmpleado(mvc, negocios, usuarios, passwordEncoder, clock);
 
         mvc.perform(empleado.autenticar(get(RUTA))).andExpect(status().isForbidden());
         mvc.perform(empleado.autenticar(post(RUTA))

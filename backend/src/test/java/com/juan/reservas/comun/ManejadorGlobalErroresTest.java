@@ -58,6 +58,13 @@ class ManejadorGlobalErroresTest {
     }
 
     @Test
+    void solapeDeHorarioDevuelve409ConSuPropioMensaje() throws Exception {
+        mvc.perform(get("/prueba/solape-horario"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value("Hay franjas del horario que se solapan"));
+    }
+
+    @Test
     void validacionDevuelve400ConErroresPorCampo() throws Exception {
         mvc.perform(post("/prueba/validacion")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -91,9 +98,19 @@ class ManejadorGlobalErroresTest {
 
         @GetMapping("/prueba/solape")
         void solape() {
-            SQLException sql = new SQLException("conflicting key value violates exclusion constraint",
+            throw violacionDeExclusion("reserva_sin_solape");
+        }
+
+        @GetMapping("/prueba/solape-horario")
+        void solapeHorario() {
+            throw violacionDeExclusion("horario_sin_solape");
+        }
+
+        private static DataIntegrityViolationException violacionDeExclusion(String restriccion) {
+            SQLException sql = new SQLException(
+                    "conflicting key value violates exclusion constraint \"" + restriccion + "\"",
                     ManejadorGlobalErrores.SQLSTATE_EXCLUSION_VIOLATION);
-            throw new DataIntegrityViolationException("reserva_sin_solape", sql);
+            return new DataIntegrityViolationException("could not execute statement", sql);
         }
 
         @PostMapping("/prueba/validacion")
