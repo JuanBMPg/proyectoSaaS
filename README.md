@@ -1,6 +1,6 @@
 # Reservas para pequeños negocios
 
-[![CI](https://github.com/JuanBMPg/reservas/actions/workflows/ci.yml/badge.svg)](https://github.com/JuanBMPg/reservas/actions/workflows/ci.yml)
+[![CI](https://github.com/JuanBMPg/proyectoSaaS/actions/workflows/ci.yml/badge.svg)](https://github.com/JuanBMPg/proyectoSaaS/actions/workflows/ci.yml)
 
 Plataforma SaaS de reservas online para cualquier negocio pequeño: peluquerías, fisioterapeutas,
 talleres, pistas deportivas o academias. Cada negocio configura sus servicios, sus recursos
