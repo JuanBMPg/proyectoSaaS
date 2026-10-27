@@ -1,0 +1,71 @@
+<a mat-button routerLink="/panel/recursos" class="volver">
+  <mat-icon>arrow_back</mat-icon> Recursos
+</a>
+
+<header class="cabecera">
+  <h1>Horario de {{ recurso()?.nombre ?? 'recurso' }}</h1>
+  <p class="secundario">Horas locales del negocio. Un día sin franjas queda cerrado.</p>
+</header>
+
+@if (error(); as mensaje) {
+  <p class="error" role="alert">{{ mensaje }}</p>
+}
+
+@if (!cargando()) {
+  <form [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+    <div class="dias">
+      @for (nombre of nombresDia; track nombre; let d = $index) {
+        <section class="dia" [attr.aria-label]="nombre">
+          <h2>{{ nombre }}</h2>
+
+          @for (tramo of dia(d).controls; track tramo; let f = $index) {
+            <div class="franja" [formGroup]="tramo">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Desde</mat-label>
+                <input matInput type="time" step="900" formControlName="horaInicio" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Hasta</mat-label>
+                <input matInput type="time" step="900" formControlName="horaFin" />
+              </mat-form-field>
+              <button
+                mat-icon-button
+                type="button"
+                (click)="quitarFranja(d, f)"
+                [attr.aria-label]="'Quitar franja ' + (f + 1) + ' del ' + nombre"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+            @if (tramo.hasError('inicioDespuesDeFin')) {
+              <p class="error-campo">La hora de inicio debe ser anterior a la de fin.</p>
+            }
+          } @empty {
+            <p class="secundario">Cerrado</p>
+          }
+
+          @if (dia(d).hasError('solape')) {
+            <p class="error-campo">Hay franjas que se solapan.</p>
+          }
+
+          <button mat-button type="button" (click)="anadirFranja(d)">
+            <mat-icon>add</mat-icon> Añadir franja
+          </button>
+        </section>
+      }
+    </div>
+
+    <div class="acciones">
+      <button mat-stroked-button type="button" (click)="copiarLunesALaborables()">
+        Copiar el lunes de martes a viernes
+      </button>
+      <button
+        mat-flat-button
+        type="submit"
+        [disabled]="guardando() || formulario.pristine || formulario.invalid"
+      >
+        Guardar horario
+      </button>
+    </div>
+  </form>
+}

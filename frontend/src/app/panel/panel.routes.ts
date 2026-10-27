@@ -21,4 +21,10 @@ export const panelRoutes: Routes = [
     canActivate: [propietarioGuard],
     loadComponent: () => import('./recursos/recursos').then((m) => m.Recursos),
   },
+  {
+    path: 'recursos/:id/horario',
+    title: 'Horario · Reservas',
+    canActivate: [propietarioGuard],
+    loadComponent: () => import('./horario/horario-recurso').then((m) => m.HorarioRecurso),
+  },
 ];

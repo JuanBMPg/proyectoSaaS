@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
+import { RouterLink } from '@angular/router';
 import { Observable, forkJoin } from 'rxjs';
 
 import { Recurso, Servicio } from '../../core/api/modelos';
@@ -15,10 +16,17 @@ import { mensajeDeError } from '../../shared/errores-http';
 import { AsignarServiciosDialogo, DatosAsignacion } from './asignar-servicios-dialogo';
 import { RecursoDialogo } from './recurso-dialogo';
 
-/** Listado de recursos con alta, edición, activación y asignación de servicios. */
+/** Listado de recursos con alta, edición, activación, asignación de servicios y acceso al horario. */
 @Component({
   selector: 'app-recursos',
-  imports: [MatButtonModule, MatChipsModule, MatIconModule, MatSlideToggleModule, MatTableModule],
+  imports: [
+    MatButtonModule,
+    MatChipsModule,
+    MatIconModule,
+    MatSlideToggleModule,
+    MatTableModule,
+    RouterLink,
+  ],
   templateUrl: './recursos.html',
   styleUrl: '../tabla-panel.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

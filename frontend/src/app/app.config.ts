@@ -9,7 +9,7 @@ import {
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { MatIconRegistry } from '@angular/material/icon';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { routes } from './app.routes';
@@ -22,7 +22,8 @@ registerLocaleData(localeEs);
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes),
+    // Los parámetros de la URL (p. ej. :id) llegan a los componentes como input()
+    provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(withInterceptors([authInterceptor])),
     { provide: LOCALE_ID, useValue: 'es-ES' },
     // Antes de la primera navegación intenta recuperar la sesión con la cookie del refresh
