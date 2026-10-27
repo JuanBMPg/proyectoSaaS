@@ -132,11 +132,12 @@ h3 {
   p {
     margin: 0;
   }
+}
 
-  .nota {
-    font: var(--mat-sys-body-small);
-    opacity: 0.8;
-  }
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .error {

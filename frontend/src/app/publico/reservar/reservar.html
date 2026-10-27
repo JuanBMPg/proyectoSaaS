@@ -145,6 +145,10 @@
           </section>
         }
 
+        @if (errorReserva(); as mensaje) {
+          <p class="error" role="alert">{{ mensaje }}</p>
+        }
+
         @if (resumen(); as resumen) {
           <section class="resumen" aria-label="Resumen de tu cita">
             <p>
@@ -152,8 +156,61 @@
               {{ resumen.dia }}, a las {{ resumen.hora }} ·
               {{ centimosAEuros(resumen.precioCentimos) | currency: 'EUR' }}
             </p>
-            <button mat-flat-button type="button" disabled>Continuar</button>
-            <p class="nota">Muy pronto podrás completar aquí tus datos y confirmar la cita.</p>
+            @if (!mostrarFormulario()) {
+              <button mat-flat-button type="button" (click)="continuar()">Continuar</button>
+            }
+          </section>
+        }
+
+        @if (mostrarFormulario()) {
+          <section class="bloque" aria-labelledby="titulo-datos">
+            <h2 id="titulo-datos">Tus datos</h2>
+            <form [formGroup]="datos" (ngSubmit)="confirmar()" novalidate class="formulario">
+              <mat-form-field appearance="outline">
+                <mat-label>Nombre</mat-label>
+                <input matInput formControlName="nombre" autocomplete="name" />
+                @if (datos.controls.nombre.hasError('required')) {
+                  <mat-error>Escribe tu nombre</mat-error>
+                } @else if (datos.controls.nombre.hasError('servidor')) {
+                  <mat-error>{{ datos.controls.nombre.getError('servidor') }}</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Email</mat-label>
+                <input matInput type="email" formControlName="email" autocomplete="email" />
+                <mat-hint>Te enviaremos aquí la confirmación</mat-hint>
+                @if (datos.controls.email.hasError('required')) {
+                  <mat-error>Escribe tu email</mat-error>
+                } @else if (datos.controls.email.hasError('email')) {
+                  <mat-error>El email no es válido</mat-error>
+                } @else if (datos.controls.email.hasError('servidor')) {
+                  <mat-error>{{ datos.controls.email.getError('servidor') }}</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Teléfono (opcional)</mat-label>
+                <input matInput type="tel" formControlName="telefono" autocomplete="tel" />
+                @if (datos.controls.telefono.hasError('pattern')) {
+                  <mat-error>Solo números, espacios y + ( ) -</mat-error>
+                } @else if (datos.controls.telefono.hasError('servidor')) {
+                  <mat-error>{{ datos.controls.telefono.getError('servidor') }}</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Nota para el negocio (opcional)</mat-label>
+                <textarea matInput formControlName="notas" rows="2"></textarea>
+              </mat-form-field>
+
+              <button mat-flat-button type="submit" [disabled]="enviando() || !horaElegida()">
+                Confirmar reserva
+              </button>
+              @if (!horaElegida()) {
+                <p class="tenue">Elige una hora para poder confirmar.</p>
+              }
+            </form>
           </section>
         }
       </main>
