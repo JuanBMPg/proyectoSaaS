@@ -1,0 +1,16 @@
+<mat-toolbar>
+  <span class="titulo">{{ negocio()?.nombre ?? 'Panel' }}</span>
+  <button mat-button type="button" (click)="cerrarSesion()">Cerrar sesión</button>
+</mat-toolbar>
+
+<main class="contenido">
+  <h1>Bienvenido al panel</h1>
+  @if (negocio(); as negocio) {
+    <p>
+      Tu página pública: <strong>/{{ negocio.slug }}</strong> · Zona horaria:
+      {{ negocio.zonaHoraria }}
+    </p>
+  } @else if (rol() === 'EMPLEADO') {
+    <p>Aquí verás tu agenda.</p>
+  }
+</main>

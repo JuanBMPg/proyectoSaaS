@@ -1,0 +1,87 @@
+<main class="auth-pagina">
+  <mat-card class="auth-tarjeta" appearance="outlined">
+    @if (enviando()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+    <mat-card-header>
+      <mat-card-title><h1>Da de alta tu negocio</h1></mat-card-title>
+      <mat-card-subtitle>Tus clientes podrán reservar desde tu página pública</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="formulario" (ngSubmit)="enviar()" novalidate>
+        @if (error(); as mensaje) {
+          <p class="auth-error" role="alert">{{ mensaje }}</p>
+        }
+
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre del negocio</mat-label>
+          <input matInput formControlName="nombreNegocio" autocomplete="organization" />
+          @if (formulario.controls.nombreNegocio.hasError('required')) {
+            <mat-error>Escribe el nombre del negocio</mat-error>
+          } @else if (formulario.controls.nombreNegocio.hasError('servidor')) {
+            <mat-error>{{ formulario.controls.nombreNegocio.getError('servidor') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Dirección de tu página</mat-label>
+          <input matInput formControlName="slug" autocomplete="off" />
+          <mat-hint>Ejemplo: peluqueria-lola. Solo minúsculas, números y guiones.</mat-hint>
+          @if (formulario.controls.slug.hasError('required')) {
+            <mat-error>Elige la dirección de tu página</mat-error>
+          } @else if (
+            formulario.controls.slug.hasError('pattern') ||
+            formulario.controls.slug.hasError('minlength')
+          ) {
+            <mat-error>Mínimo 3 caracteres: minúsculas, números y guiones</mat-error>
+          } @else if (formulario.controls.slug.hasError('servidor')) {
+            <mat-error>{{ formulario.controls.slug.getError('servidor') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Tu nombre</mat-label>
+          <input matInput formControlName="nombre" autocomplete="name" />
+          @if (formulario.controls.nombre.hasError('required')) {
+            <mat-error>Escribe tu nombre</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" formControlName="email" autocomplete="email" />
+          @if (formulario.controls.email.hasError('required')) {
+            <mat-error>Escribe tu email</mat-error>
+          } @else if (formulario.controls.email.hasError('email')) {
+            <mat-error>El email no es válido</mat-error>
+          } @else if (formulario.controls.email.hasError('servidor')) {
+            <mat-error>{{ formulario.controls.email.getError('servidor') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Contraseña</mat-label>
+          <input matInput type="password" formControlName="password" autocomplete="new-password" />
+          <mat-hint>Entre 8 y 72 caracteres</mat-hint>
+          @if (formulario.controls.password.hasError('required')) {
+            <mat-error>Elige una contraseña</mat-error>
+          } @else if (
+            formulario.controls.password.hasError('minlength') ||
+            formulario.controls.password.hasError('maxlength')
+          ) {
+            <mat-error>Entre 8 y 72 caracteres</mat-error>
+          } @else if (formulario.controls.password.hasError('servidor')) {
+            <mat-error>{{ formulario.controls.password.getError('servidor') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <button mat-flat-button type="submit" [disabled]="enviando()">Crear cuenta</button>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <p>¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión</a></p>
+    </mat-card-actions>
+  </mat-card>
+</main>
