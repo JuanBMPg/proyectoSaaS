@@ -136,3 +136,40 @@ export interface Disponibilidad {
   zonaHoraria: string;
   huecos: HuecoPublico[];
 }
+
+export type EstadoReserva =
+  'PENDIENTE' | 'CONFIRMADA' | 'CANCELADA' | 'COMPLETADA' | 'NO_PRESENTADO';
+
+export interface ReservaPublicaRequest {
+  servicioId: string;
+  recursoId: string;
+  /** Instante UTC del hueco elegido. */
+  inicio: string;
+  nombre: string;
+  email: string;
+  telefono: string | null;
+  notas: string | null;
+}
+
+/** Una reserva vista desde su enlace secreto. */
+export interface ReservaPublica {
+  estado: EstadoReserva;
+  inicio: string;
+  fin: string;
+  clienteNombre: string;
+  servicio: { nombre: string; duracionMin: number; precioCentimos: number };
+  recurso: { nombre: string; etiqueta: string };
+  negocio: {
+    nombre: string;
+    slug: string;
+    zonaHoraria: string;
+    direccion: string | null;
+    telefono: string | null;
+  };
+}
+
+/** Respuesta al crear: la única vez que llega el token en claro. */
+export interface ReservaCreada {
+  token: string;
+  reserva: ReservaPublica;
+}
