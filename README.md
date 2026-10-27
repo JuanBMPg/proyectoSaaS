@@ -98,7 +98,7 @@ se marcan como omitidos; en el CI se exige que se ejecuten.
 **Fase 1: MVP** (en curso)
 - [x] Registro de negocio y login con JWT
 - [x] CRUD de servicios y recursos, y asignación servicio-recurso
-- [ ] Horario semanal por recurso
+- [x] Horario semanal por recurso
 - [ ] Calculadora de disponibilidad con tests unitarios
 - [ ] Página pública `/:slug` para reservar
 - [ ] Crear reserva con protección contra dobles reservas
