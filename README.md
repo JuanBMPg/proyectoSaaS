@@ -103,7 +103,7 @@ paquete `disponibilidad`, el núcleo del producto, baja del 80 % de líneas o de
 - [x] CRUD de servicios y recursos, y asignación servicio-recurso
 - [x] Horario semanal por recurso
 - [x] Calculadora de disponibilidad con tests unitarios
-- [ ] Página pública `/:slug` para reservar
+- [x] Página pública `/:slug`: elegir servicio, profesional, día y hora
 - [ ] Crear reserva con protección contra dobles reservas
 - [ ] Email de confirmación con enlace de cancelación
 - [ ] Agenda del panel con FullCalendar
