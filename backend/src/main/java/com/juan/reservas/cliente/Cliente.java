@@ -48,6 +48,12 @@ public class Cliente extends EntidadBase {
         this.creadoEn = creadoEn;
     }
 
+    /** Cada reserva trae los datos más recientes del cliente: se guardan esos. */
+    public void actualizarContacto(String nombre, String telefono) {
+        this.nombre = nombre;
+        this.telefono = telefono;
+    }
+
     public Negocio getNegocio() {
         return negocio;
     }
