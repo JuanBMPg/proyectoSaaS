@@ -21,6 +21,8 @@ export class AuthService {
 
   private readonly token = signal<string | null>(null);
   private refrescoEnCurso: Observable<string> | null = null;
+  /** Si ya se intentó recuperar la sesión con la cookie (se hace una sola vez). */
+  private sesionComprobada = false;
 
   readonly accessToken = this.token.asReadonly();
   readonly autenticado = computed(() => this.token() !== null);
@@ -65,11 +67,19 @@ export class AuthService {
     return this.refrescoEnCurso;
   }
 
-  /** Al arrancar la aplicación: si hay una cookie de sesión válida, se recupera la sesión. */
-  restaurarSesion(): Observable<void> {
+  /**
+   * ¿Hay sesión? Si no hay token en memoria (p. ej. tras recargar la página), la primera vez
+   * intenta recuperarla con la cookie del refresh token. Lo usan los guards del panel y del
+   * login, así la página pública no hace esa llamada por cada cliente que entra a reservar.
+   */
+  comprobarSesion(): Observable<boolean> {
+    if (this.autenticado() || this.sesionComprobada) {
+      return of(this.autenticado());
+    }
+    this.sesionComprobada = true;
     return this.refrescar().pipe(
-      map(() => undefined),
-      catchError(() => of(undefined)),
+      map(() => true),
+      catchError(() => of(false)),
     );
   }
 
