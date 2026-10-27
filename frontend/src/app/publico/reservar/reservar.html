@@ -1,0 +1,162 @@
+@switch (estado()) {
+  @case ('cargando') {
+    <div class="centrado"><mat-spinner diameter="40" aria-label="Cargando" /></div>
+  }
+  @case ('no-existe') {
+    <main class="pagina centrado">
+      <h1>Este negocio no existe</h1>
+      <p class="tenue">Revisa la dirección: quizá haya cambiado o esté mal escrita.</p>
+    </main>
+  }
+  @case ('error') {
+    <main class="pagina centrado">
+      <h1>No se ha podido cargar la página</h1>
+      <p class="tenue">{{ error() }}</p>
+    </main>
+  }
+  @case ('listo') {
+    @if (negocio(); as negocio) {
+      <main class="pagina">
+        <header class="cabecera">
+          <h1>{{ negocio.nombre }}</h1>
+          <p class="tenue">
+            @if (negocio.direccion) {
+              {{ negocio.direccion }} ·
+            }
+            @if (negocio.telefono) {
+              {{ negocio.telefono }} ·
+            }
+            Horas de {{ negocio.zonaHoraria }}
+          </p>
+        </header>
+
+        @if (error(); as mensaje) {
+          <p class="error" role="alert">{{ mensaje }}</p>
+        }
+
+        <section class="bloque" aria-labelledby="titulo-servicio">
+          <h2 id="titulo-servicio">Servicio</h2>
+          @if (negocio.servicios.length === 0) {
+            <p class="tenue">Este negocio todavía no tiene servicios disponibles para reservar.</p>
+          }
+          <div class="servicios">
+            @for (opcion of negocio.servicios; track opcion.id) {
+              <button
+                type="button"
+                class="servicio"
+                [class.elegido]="opcion.id === servicio()?.id"
+                [attr.aria-pressed]="opcion.id === servicio()?.id"
+                (click)="elegirServicio(opcion)"
+              >
+                <span class="servicio-nombre">
+                  {{ opcion.nombre }}
+                  <span class="tenue">· {{ opcion.duracionMin }} min</span>
+                </span>
+                <span class="precio">{{
+                  centimosAEuros(opcion.precioCentimos) | currency: 'EUR'
+                }}</span>
+                @if (opcion.descripcion) {
+                  <span class="descripcion tenue">{{ opcion.descripcion }}</span>
+                }
+              </button>
+            }
+          </div>
+        </section>
+
+        @if (servicio()) {
+          <section class="bloque" aria-labelledby="titulo-recurso">
+            <h2 id="titulo-recurso">{{ negocio.etiquetaRecurso }}</h2>
+            <div class="opciones">
+              <button
+                type="button"
+                class="opcion"
+                [class.elegido]="recursoId() === null"
+                [attr.aria-pressed]="recursoId() === null"
+                (click)="elegirRecurso(null)"
+              >
+                Sin preferencia
+              </button>
+              @for (recurso of recursosDelServicio(); track recurso.id) {
+                <button
+                  type="button"
+                  class="opcion"
+                  [class.elegido]="recursoId() === recurso.id"
+                  [attr.aria-pressed]="recursoId() === recurso.id"
+                  (click)="elegirRecurso(recurso.id)"
+                >
+                  {{ recurso.nombre }}
+                </button>
+              }
+            </div>
+          </section>
+
+          <section class="bloque" aria-labelledby="titulo-dia">
+            <h2 id="titulo-dia">Día</h2>
+            <mat-calendar
+              [minDate]="hoy"
+              [maxDate]="ultimoDia()"
+              [selected]="fecha()"
+              (selectedChange)="elegirFecha($event)"
+            />
+          </section>
+        }
+
+        @if (fecha() && servicio()) {
+          <section class="bloque" aria-labelledby="titulo-hora" aria-live="polite">
+            <h2 id="titulo-hora">Hora</h2>
+            @if (cargandoHoras()) {
+              <mat-spinner diameter="28" aria-label="Buscando horas libres" />
+            } @else if (sinHoras()) {
+              <p class="tenue">No quedan horas libres este día. Prueba con otro.</p>
+            } @else if (horas(); as horas) {
+              @if (horas.manana.length > 0) {
+                <h3>Mañana</h3>
+                <div class="horas">
+                  @for (hora of horas.manana; track hora.inicio) {
+                    <button
+                      type="button"
+                      class="hora"
+                      [class.elegido]="hora.inicio === horaElegida()?.inicio"
+                      [attr.aria-pressed]="hora.inicio === horaElegida()?.inicio"
+                      (click)="elegirHora(hora)"
+                    >
+                      {{ hora.etiqueta }}
+                    </button>
+                  }
+                </div>
+              }
+              @if (horas.tarde.length > 0) {
+                <h3>Tarde</h3>
+                <div class="horas">
+                  @for (hora of horas.tarde; track hora.inicio) {
+                    <button
+                      type="button"
+                      class="hora"
+                      [class.elegido]="hora.inicio === horaElegida()?.inicio"
+                      [attr.aria-pressed]="hora.inicio === horaElegida()?.inicio"
+                      (click)="elegirHora(hora)"
+                    >
+                      {{ hora.etiqueta }}
+                    </button>
+                  }
+                </div>
+              }
+            }
+          </section>
+        }
+
+        @if (resumen(); as resumen) {
+          <section class="resumen" aria-label="Resumen de tu cita">
+            <p>
+              <strong>{{ resumen.servicio }}</strong> con {{ resumen.recurso }}<br />
+              {{ resumen.dia }}, a las {{ resumen.hora }} ·
+              {{ centimosAEuros(resumen.precioCentimos) | currency: 'EUR' }}
+            </p>
+            <button mat-flat-button type="button" disabled>Continuar</button>
+            <p class="nota">Muy pronto podrás completar aquí tus datos y confirmar la cita.</p>
+          </section>
+        }
+      </main>
+    }
+  }
+}
