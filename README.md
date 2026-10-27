@@ -86,6 +86,9 @@ cd frontend && npm run lint && npm test
 Los tests de integración levantan un PostgreSQL real con Testcontainers. Si no hay Docker disponible
 se marcan como omitidos; en el CI se exige que se ejecuten.
 
+`mvnw verify` mide la cobertura con JaCoCo (informe en `backend/target/site/jacoco/index.html`) y falla si el
+paquete `disponibilidad`, el núcleo del producto, baja del 80 % de líneas o de ramas.
+
 ## Estado del proyecto
 
 **Fase 0: cimientos** ✅
@@ -99,7 +102,7 @@ se marcan como omitidos; en el CI se exige que se ejecuten.
 - [x] Registro de negocio y login con JWT
 - [x] CRUD de servicios y recursos, y asignación servicio-recurso
 - [x] Horario semanal por recurso
-- [ ] Calculadora de disponibilidad con tests unitarios
+- [x] Calculadora de disponibilidad con tests unitarios
 - [ ] Página pública `/:slug` para reservar
 - [ ] Crear reserva con protección contra dobles reservas
 - [ ] Email de confirmación con enlace de cancelación
@@ -117,6 +120,9 @@ la fase 3 (pagos, estadísticas, plantillas de sector) y la fase 4 (widget, iCal
   aunque lleguen dos peticiones en el mismo milisegundo. La violación (SQLState `23P01`) se traduce a `409 Conflict`.
 - **Zonas horarias.** Los instantes se guardan en UTC (`timestamptz` / `Instant`) y los horarios semanales
   en hora local del negocio (`time` / `LocalTime`).
+- **Disponibilidad como lógica pura.** `CalculadoraDisponibilidad` recibe horarios, reservas y reglas ya cargados
+  y devuelve los huecos en UTC, sin base de datos ni reloj. Tiene tests de los dos cambios de hora del año
+  (días de 23 y 25 horas) y un test de propiedades con datos aleatorios.
 - **Tiempo testeable.** Se inyecta un `java.time.Clock` en lugar de llamar a `Instant.now()`.
 - **Sesión segura.** El access token (JWT de 15 min) vive solo en memoria en el frontend; el refresh token
   (7 días, rotado en cada uso y guardado como hash) viaja en una cookie `HttpOnly; SameSite=Strict`.
