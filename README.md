@@ -104,7 +104,7 @@ paquete `disponibilidad`, el núcleo del producto, baja del 80 % de líneas o de
 - [x] Horario semanal por recurso
 - [x] Calculadora de disponibilidad con tests unitarios
 - [x] Página pública `/:slug`: elegir servicio, profesional, día y hora
-- [ ] Crear reserva con protección contra dobles reservas
+- [x] Crear reserva con protección contra dobles reservas
 - [ ] Email de confirmación con enlace de cancelación
 - [ ] Agenda del panel con FullCalendar
 - [ ] Empleados con acceso solo a su agenda
@@ -120,6 +120,9 @@ la fase 3 (pagos, estadísticas, plantillas de sector) y la fase 4 (widget, iCal
   aunque lleguen dos peticiones en el mismo milisegundo. La violación (SQLState `23P01`) se traduce a `409 Conflict`.
 - **Zonas horarias.** Los instantes se guardan en UTC (`timestamptz` / `Instant`) y los horarios semanales
   en hora local del negocio (`time` / `LocalTime`).
+- **Dos capas contra las dobles reservas.** Al crear una reserva se vuelve a comprobar la disponibilidad
+  dentro de la transacción, pero la garantía real es la restricción de PostgreSQL: un test lanza 10 reservas
+  simultáneas al mismo hueco y exige que solo se guarde una (las demás reciben 409).
 - **Disponibilidad como lógica pura.** `CalculadoraDisponibilidad` recibe horarios, reservas y reglas ya cargados
   y devuelve los huecos en UTC, sin base de datos ni reloj. Tiene tests de los dos cambios de hora del año
   (días de 23 y 25 horas) y un test de propiedades con datos aleatorios.
