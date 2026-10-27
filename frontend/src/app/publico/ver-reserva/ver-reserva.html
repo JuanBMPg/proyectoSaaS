@@ -1,0 +1,68 @@
+@switch (estado()) {
+  @case ('cargando') {
+    <div class="centrado"><mat-spinner diameter="40" aria-label="Cargando tu reserva" /></div>
+  }
+  @case ('no-existe') {
+    <main class="pagina centrado">
+      <h1>Esta reserva no existe</h1>
+      <p class="tenue">Revisa que el enlace esté completo y sin espacios.</p>
+    </main>
+  }
+  @case ('error') {
+    <main class="pagina centrado">
+      <h1>No se ha podido cargar tu reserva</h1>
+      <p class="tenue">{{ error() }}</p>
+    </main>
+  }
+  @case ('listo') {
+    @if (reserva(); as reserva) {
+      <main class="pagina">
+        <p class="estado" [class.pendiente]="reserva.estado === 'PENDIENTE'" role="status">
+          {{ textoEstado() }}
+        </p>
+
+        <h1>{{ reserva.servicio.nombre }}</h1>
+
+        @if (cuando(); as cuando) {
+          <p class="cuando">
+            <span class="dia">{{ cuando.dia }}</span>
+            <span class="horas">{{ cuando.desde }} – {{ cuando.hasta }}</span>
+          </p>
+        }
+
+        <dl class="detalle">
+          <div>
+            <dt>{{ reserva.recurso.etiqueta }}</dt>
+            <dd>{{ reserva.recurso.nombre }}</dd>
+          </div>
+          <div>
+            <dt>A nombre de</dt>
+            <dd>{{ reserva.clienteNombre }}</dd>
+          </div>
+          <div>
+            <dt>Precio</dt>
+            <dd>{{ centimosAEuros(reserva.servicio.precioCentimos) | currency: 'EUR' }}</dd>
+          </div>
+          <div>
+            <dt>Dónde</dt>
+            <dd>
+              {{ reserva.negocio.nombre }}
+              @if (reserva.negocio.direccion) {
+                <br />{{ reserva.negocio.direccion }}
+              }
+              @if (reserva.negocio.telefono) {
+                <br />{{ reserva.negocio.telefono }}
+              }
+            </dd>
+          </div>
+        </dl>
+
+        <p class="aviso">
+          Guarda esta página o su enlace: con él puedes consultar tu cita en cualquier momento.
+        </p>
+
+        <a mat-stroked-button [routerLink]="['/', reserva.negocio.slug]">Reservar otra cita</a>
+      </main>
+    }
+  }
+}

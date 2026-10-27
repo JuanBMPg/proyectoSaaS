@@ -23,6 +23,12 @@ export const routes: Routes = [
     loadComponent: () => import('./panel/panel').then((m) => m.Panel),
     loadChildren: () => import('./panel/panel.routes').then((m) => m.panelRoutes),
   },
+  // Reserva vista desde su enlace secreto. "reserva" es un slug reservado: no choca con /:slug
+  {
+    path: 'reserva/:token',
+    title: 'Tu reserva',
+    loadComponent: () => import('./publico/ver-reserva/ver-reserva').then((m) => m.VerReserva),
+  },
   // Página pública de cada negocio. Va después de las rutas fijas: un negocio no puede
   // llamarse "login" o "panel" (el backend rechaza esos slugs al registrarse)
   {

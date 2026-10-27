@@ -9,27 +9,42 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { provideNativeDateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
+import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Title } from '@angular/platform-browser';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 
 import { NegocioPublico, ServicioPublico } from '../../core/api/modelos';
 import { PublicoApiService } from '../../core/api/publico-api.service';
-import { mensajeDeError } from '../../shared/errores-http';
+import { erroresDeCampo, mensajeDeError } from '../../shared/errores-http';
 import { fechaIso, fechaLargaEnZona } from '../../shared/fechas';
 import { centimosAEuros } from '../../shared/precio';
 import { HoraOfrecida, HorasDelDia, horasDelDia } from './horas';
 
+/** Mismo patrón que valida el backend: números, espacios y + ( ) -. */
+const PATRON_TELEFONO = /^[0-9+()\s-]{6,30}$/;
+
 /**
  * Página pública de un negocio (/:slug). Una sola página que se va completando de arriba
- * abajo: servicio, profesional, día y hora. Cada elección actualiza lo que hay debajo.
+ * abajo: servicio, profesional, día, hora y, al final, los datos del cliente para confirmar.
  */
 @Component({
   selector: 'app-reservar',
-  imports: [CurrencyPipe, MatButtonModule, MatDatepickerModule, MatProgressSpinnerModule],
+  imports: [
+    CurrencyPipe,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatDatepickerModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatProgressSpinnerModule,
+  ],
   providers: [provideNativeDateAdapter(), { provide: MAT_DATE_LOCALE, useValue: 'es-ES' }],
   templateUrl: './reservar.html',
   styleUrl: './reservar.scss',
@@ -38,6 +53,7 @@ import { HoraOfrecida, HorasDelDia, horasDelDia } from './horas';
 export class Reservar implements OnInit {
   private readonly api = inject(PublicoApiService);
   private readonly titulo = inject(Title);
+  private readonly router = inject(Router);
 
   /** Slug del negocio, tomado de la URL. */
   readonly slug = input.required<string>();
@@ -53,6 +69,17 @@ export class Reservar implements OnInit {
   protected readonly horas = signal<HorasDelDia | null>(null);
   protected readonly cargandoHoras = signal(false);
   protected readonly horaElegida = signal<HoraOfrecida | null>(null);
+
+  /** Formulario de datos: aparece al pulsar "Continuar" y se conserva si hay que cambiar de hora. */
+  protected readonly mostrarFormulario = signal(false);
+  protected readonly enviando = signal(false);
+  protected readonly errorReserva = signal<string | null>(null);
+  protected readonly datos = inject(NonNullableFormBuilder).group({
+    nombre: ['', [Validators.required, Validators.maxLength(120)]],
+    email: ['', [Validators.required, Validators.email, Validators.maxLength(160)]],
+    telefono: ['', Validators.pattern(PATRON_TELEFONO)],
+    notas: ['', Validators.maxLength(500)],
+  });
 
   protected readonly centimosAEuros = centimosAEuros;
   protected readonly hoy = new Date();
@@ -133,6 +160,63 @@ export class Reservar implements OnInit {
 
   protected elegirHora(hora: HoraOfrecida): void {
     this.horaElegida.set(hora);
+    this.errorReserva.set(null);
+  }
+
+  protected continuar(): void {
+    this.mostrarFormulario.set(true);
+  }
+
+  protected confirmar(): void {
+    const servicio = this.servicio();
+    const hora = this.horaElegida();
+    if (!servicio || !hora) {
+      return;
+    }
+    if (this.datos.invalid) {
+      this.datos.markAllAsTouched();
+      return;
+    }
+    const { nombre, email, telefono, notas } = this.datos.getRawValue();
+
+    this.enviando.set(true);
+    this.errorReserva.set(null);
+    this.api
+      .crearReserva(this.slug(), {
+        servicioId: servicio.id,
+        recursoId: hora.recursoId,
+        inicio: hora.inicio,
+        nombre: nombre.trim(),
+        email: email.trim(),
+        telefono: telefono.trim() || null,
+        notas: notas.trim() || null,
+      })
+      .subscribe({
+        next: ({ token }) => void this.router.navigate(['/reserva', token]),
+        error: (error: unknown) => this.tratarErrorReserva(error),
+      });
+  }
+
+  /**
+   * 409: otra persona se ha quedado el hueco. Se recargan las horas para que elija otra,
+   * sin perder los datos que ya ha escrito. 400: errores bajo cada campo. Resto: aviso.
+   */
+  private tratarErrorReserva(error: unknown): void {
+    this.enviando.set(false);
+    if (error instanceof HttpErrorResponse && error.status === 409) {
+      this.errorReserva.set('Ese hueco acaba de ocuparse. Elige otra hora.');
+      this.cargarHoras();
+      return;
+    }
+    const porCampo = erroresDeCampo(error);
+    const campos = Object.entries(porCampo).filter(([campo]) => this.datos.get(campo));
+    for (const [campo, mensaje] of campos) {
+      this.datos.get(campo)?.setErrors({ servidor: mensaje });
+      this.datos.get(campo)?.markAsTouched();
+    }
+    if (campos.length === 0) {
+      this.errorReserva.set(mensajeDeError(error));
+    }
   }
 
   /**
