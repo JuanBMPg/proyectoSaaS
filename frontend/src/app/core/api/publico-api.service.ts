@@ -2,7 +2,13 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { Disponibilidad, NegocioPublico } from './modelos';
+import {
+  Disponibilidad,
+  NegocioPublico,
+  ReservaCreada,
+  ReservaPublica,
+  ReservaPublicaRequest,
+} from './modelos';
 
 /** API de la web pública: sin login, el negocio se identifica por su slug. */
 @Injectable({ providedIn: 'root' })
@@ -31,5 +37,17 @@ export class PublicoApiService {
       `/api/publico/${encodeURIComponent(slug)}/disponibilidad`,
       { params },
     );
+  }
+
+  /** 409 si el hueco se acaba de ocupar; 422 si incumple la antelación del negocio. */
+  crearReserva(slug: string, datos: ReservaPublicaRequest): Observable<ReservaCreada> {
+    return this.http.post<ReservaCreada>(
+      `/api/publico/${encodeURIComponent(slug)}/reservas`,
+      datos,
+    );
+  }
+
+  reserva(token: string): Observable<ReservaPublica> {
+    return this.http.get<ReservaPublica>(`/api/publico/reservas/${encodeURIComponent(token)}`);
   }
 }
