@@ -2,6 +2,7 @@ package com.juan.reservas.recurso;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.util.UUID;
 
 import com.juan.reservas.comun.EntidadBase;
 
@@ -45,6 +46,11 @@ public class Horario extends EntidadBase {
         this.diaSemana = diaSemana;
         this.horaInicio = horaInicio;
         this.horaFin = horaFin;
+    }
+
+    /** Id del recurso sin cargarlo: Hibernate lo conoce sin consultar la tabla recurso. */
+    public UUID getRecursoId() {
+        return recurso.getId();
     }
 
     public DayOfWeek getDiaSemana() {
