@@ -4,6 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import localeEs from '@angular/common/locales/es';
 import { LOCALE_ID } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router, provideRouter } from '@angular/router';
 
 import { NegocioPublico } from '../../core/api/modelos';
 import { fechaIso } from '../../shared/fechas';
@@ -54,6 +55,7 @@ describe('Reservar', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        provideRouter([]),
         { provide: LOCALE_ID, useValue: 'es-ES' },
       ],
     }).compileComponents();
@@ -174,5 +176,94 @@ describe('Reservar', () => {
     peticion.flush({ fecha: '', zonaHoraria: 'Europe/Madrid', huecos: [] });
     await fixture.whenStable();
     expect(elemento.textContent).toContain('No quedan horas libres este día');
+  });
+
+  // --- Confirmar la reserva ---
+
+  const HUECO_MARTA = {
+    recursoId: 'marta',
+    inicio: '2026-06-02T08:00:00Z',
+    fin: '2026-06-02T08:30:00Z',
+  };
+
+  /** Servicio, día y la hora de las 10:00 elegidos; formulario abierto. */
+  async function hastaElFormulario(): Promise<void> {
+    await cargarNegocio();
+    await pulsar('Corte de pelo');
+    (await elegirPrimerDia()).flush({
+      fecha: '2026-06-02',
+      zonaHoraria: 'Europe/Madrid',
+      huecos: [HUECO_MARTA],
+    });
+    await fixture.whenStable();
+    await pulsar('10:00');
+    await pulsar('Continuar');
+  }
+
+  function escribir(control: string, valor: string): void {
+    const campo = elemento.querySelector<HTMLInputElement>(`[formControlName=${control}]`)!;
+    campo.value = valor;
+    campo.dispatchEvent(new Event('input'));
+  }
+
+  it('confirma la reserva con el profesional de la hora elegida y lleva a su página', async () => {
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    await hastaElFormulario();
+    escribir('nombre', '  Juan ');
+    escribir('email', 'juan@example.com');
+
+    await pulsar('Confirmar reserva');
+
+    const peticion = http.expectOne('/api/publico/peluqueria-lola/reservas');
+    expect(peticion.request.method).toBe('POST');
+    expect(peticion.request.body).toEqual({
+      servicioId: 'corte',
+      recursoId: 'marta',
+      inicio: '2026-06-02T08:00:00Z',
+      nombre: 'Juan',
+      email: 'juan@example.com',
+      telefono: null,
+      notas: null,
+    });
+    peticion.flush({ token: 'token-secreto', reserva: {} });
+
+    expect(navegar).toHaveBeenCalledWith(['/reserva', 'token-secreto']);
+  });
+
+  it('no envía nada si faltan el nombre o el email', async () => {
+    await hastaElFormulario();
+
+    await pulsar('Confirmar reserva');
+
+    http.expectNone('/api/publico/peluqueria-lola/reservas');
+    expect(elemento.textContent).toContain('Escribe tu nombre');
+  });
+
+  it('si el hueco se acaba de ocupar avisa, recarga las horas y conserva los datos', async () => {
+    await hastaElFormulario();
+    escribir('nombre', 'Juan');
+    escribir('email', 'juan@example.com');
+
+    await pulsar('Confirmar reserva');
+    http
+      .expectOne('/api/publico/peluqueria-lola/reservas')
+      .flush(
+        { status: 409, detail: 'Ese hueco acaba de ocuparse' },
+        { status: 409, statusText: 'Conflict' },
+      );
+    await fixture.whenStable();
+
+    expect(elemento.querySelector('[role=alert]')?.textContent).toContain(
+      'Ese hueco acaba de ocuparse. Elige otra hora.',
+    );
+    // Las horas se vuelven a pedir y hay que elegir una nueva para poder confirmar
+    http
+      .expectOne((p) => p.url.endsWith('/disponibilidad'))
+      .flush({ fecha: '2026-06-02', zonaHoraria: 'Europe/Madrid', huecos: [] });
+    await fixture.whenStable();
+    expect(boton('Confirmar reserva').disabled).toBe(true);
+    expect(elemento.querySelector<HTMLInputElement>('[formControlName=nombre]')!.value).toBe(
+      'Juan',
+    );
   });
 });
