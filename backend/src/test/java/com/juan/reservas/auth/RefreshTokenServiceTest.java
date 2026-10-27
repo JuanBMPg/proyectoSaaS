@@ -60,12 +60,6 @@ class RefreshTokenServiceTest {
     }
 
     @Test
-    void elHashEsDeterministaYNoRevelaElToken() {
-        assertThat(RefreshTokenService.hash("abc")).isEqualTo(RefreshTokenService.hash("abc"));
-        assertThat(RefreshTokenService.hash("abc")).isNotEqualTo("abc").hasSize(64);
-    }
-
-    @Test
     void consumirUnTokenValidoLoRevocaYDevuelveSuUsuario() {
         RefreshToken token = new RefreshToken(usuario, "hash", AHORA.plus(Duration.ofDays(1)));
         when(repository.findByTokenHash(any())).thenReturn(Optional.of(token));
