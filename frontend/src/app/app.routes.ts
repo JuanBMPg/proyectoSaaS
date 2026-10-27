@@ -23,6 +23,12 @@ export const routes: Routes = [
     loadComponent: () => import('./panel/panel').then((m) => m.Panel),
     loadChildren: () => import('./panel/panel.routes').then((m) => m.panelRoutes),
   },
-  // Se sustituirá por la página pública /:slug
+  // Página pública de cada negocio. Va después de las rutas fijas: un negocio no puede
+  // llamarse "login" o "panel" (el backend rechaza esos slugs al registrarse)
+  {
+    path: ':slug',
+    title: 'Reservar cita',
+    loadComponent: () => import('./publico/reservar/reservar').then((m) => m.Reservar),
+  },
   { path: '**', redirectTo: '' },
 ];
