@@ -57,13 +57,18 @@ public class ManejadorGlobalErrores extends ResponseEntityExceptionHandler {
     }
 
     /**
-     * Si dos peticiones intentan ocupar el mismo hueco a la vez, la base de datos rechaza
-     * la segunda con la restricción reserva_sin_solape. Se responde 409, no 500.
+     * Las restricciones de exclusión de la base de datos impiden solapes. El caso principal:
+     * si dos peticiones intentan ocupar el mismo hueco a la vez, PostgreSQL rechaza la segunda
+     * con reserva_sin_solape. Se responde 409, no 500, con un mensaje según la restricción.
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail integridadDatos(DataIntegrityViolationException ex) {
         if (SQLSTATE_EXCLUSION_VIOLATION.equals(sqlState(ex))) {
-            return problema(HttpStatus.CONFLICT, "Conflicto", "Ese hueco acaba de ocuparse");
+            // El mensaje de PostgreSQL incluye el nombre de la restricción violada
+            String mensaje = String.valueOf(ex.getMostSpecificCause().getMessage()).contains("horario_sin_solape")
+                    ? "Hay franjas del horario que se solapan"
+                    : "Ese hueco acaba de ocuparse";
+            return problema(HttpStatus.CONFLICT, "Conflicto", mensaje);
         }
         log.error("Violación de integridad no controlada", ex);
         return problema(HttpStatus.CONFLICT, "Conflicto", "La operación entra en conflicto con datos existentes");

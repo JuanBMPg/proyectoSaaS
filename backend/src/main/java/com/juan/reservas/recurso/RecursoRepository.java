@@ -19,4 +19,6 @@ public interface RecursoRepository extends JpaRepository<Recurso, UUID> {
 
     @EntityGraph(attributePaths = "asignaciones")
     Optional<Recurso> findByIdAndNegocioId(UUID id, UUID negocioId);
+
+    boolean existsByIdAndNegocioId(UUID id, UUID negocioId);
 }
