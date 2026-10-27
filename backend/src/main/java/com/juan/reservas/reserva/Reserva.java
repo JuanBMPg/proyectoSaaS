@@ -59,9 +59,13 @@ public class Reserva extends EntidadBase {
     @Column(columnDefinition = "text")
     private String notas;
 
-    /** Secreto del enlace con el que el cliente consulta o cancela su reserva sin cuenta. */
+    /**
+     * SHA-256 del secreto del enlace con el que el cliente consulta o cancela su reserva sin
+     * cuenta. El token en claro solo se entrega al crear la reserva; aquí se guarda su hash,
+     * igual que con los refresh tokens. (La columna conserva el nombre del documento.)
+     */
     @Column(name = "token_cancelacion", nullable = false, unique = true, length = 64)
-    private String tokenCancelacion;
+    private String tokenHash;
 
     @Column(name = "creado_en", nullable = false, updatable = false)
     private Instant creadoEn;
@@ -72,7 +76,7 @@ public class Reserva extends EntidadBase {
 
     public Reserva(Negocio negocio, Servicio servicio, Recurso recurso, Cliente cliente,
             Instant inicio, Instant fin, Instant finBloqueo, EstadoReserva estado,
-            String tokenCancelacion, Instant creadoEn) {
+            String notas, String tokenHash, Instant creadoEn) {
         this.negocio = negocio;
         this.servicio = servicio;
         this.recurso = recurso;
@@ -81,7 +85,8 @@ public class Reserva extends EntidadBase {
         this.fin = fin;
         this.finBloqueo = finBloqueo;
         this.estado = estado;
-        this.tokenCancelacion = tokenCancelacion;
+        this.notas = notas;
+        this.tokenHash = tokenHash;
         this.creadoEn = creadoEn;
     }
 
@@ -121,8 +126,8 @@ public class Reserva extends EntidadBase {
         return notas;
     }
 
-    public String getTokenCancelacion() {
-        return tokenCancelacion;
+    public String getTokenHash() {
+        return tokenHash;
     }
 
     public Instant getCreadoEn() {
