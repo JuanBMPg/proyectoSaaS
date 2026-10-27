@@ -9,8 +9,9 @@ import {
   provideRouter,
 } from '@angular/router';
 
+import { Rol } from '../api/modelos';
 import { jwtFalso, respuestaToken } from '../../../testing/jwt-falso';
-import { authGuard, invitadoGuard } from './auth.guards';
+import { authGuard, invitadoGuard, propietarioGuard } from './auth.guards';
 import { AuthService } from './auth.service';
 
 describe('guards de autenticación', () => {
@@ -23,13 +24,13 @@ describe('guards de autenticación', () => {
     });
   });
 
-  function iniciarSesion(): void {
+  function iniciarSesion(rol: Rol = 'PROPIETARIO'): void {
     TestBed.inject(AuthService)
       .login({ email: 'lola@example.com', password: 'secreta123' })
       .subscribe();
     TestBed.inject(HttpTestingController)
       .expectOne('/api/auth/login')
-      .flush(respuestaToken(jwtFalso()));
+      .flush(respuestaToken(jwtFalso(rol)));
   }
 
   function ejecutar(guard: typeof authGuard) {
@@ -60,5 +61,19 @@ describe('guards de autenticación', () => {
 
   it('invitadoGuard sin sesión deja pasar', () => {
     expect(ejecutar(invitadoGuard)).toBe(true);
+  });
+
+  it('propietarioGuard deja pasar al propietario', () => {
+    iniciarSesion('PROPIETARIO');
+
+    expect(ejecutar(propietarioGuard)).toBe(true);
+  });
+
+  it('propietarioGuard devuelve al empleado al inicio del panel', () => {
+    iniciarSesion('EMPLEADO');
+
+    const resultado = ejecutar(propietarioGuard) as UrlTree;
+
+    expect(TestBed.inject(Router).serializeUrl(resultado)).toBe('/panel');
   });
 });
