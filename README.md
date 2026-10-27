@@ -50,7 +50,7 @@ Es un proyecto personal de portfolio y está en desarrollo.
 porque el proyecto incluye el Maven Wrapper (`mvnw`).
 
 ```bash
-# 1. Variables de entorno: copia el ejemplo y pon una contraseña para la base de datos
+# 1. Variables de entorno: copia el ejemplo y rellena DB_PASSWORD y JWT_SECRET (openssl rand -base64 48)
 cp .env.example .env
 
 # 2. Infraestructura: PostgreSQL y Mailpit

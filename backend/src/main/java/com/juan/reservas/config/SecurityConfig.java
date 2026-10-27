@@ -6,22 +6,32 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
+import com.juan.reservas.auth.JwtService;
+
 /**
- * Configuración de seguridad PROVISIONAL (fase 0).
- * <p>
- * Deja abiertas las rutas públicas y de autenticación y cierra todo lo demás.
- * Como aún no hay filtro JWT, el panel responde siempre 401. El filtro se añade
- * en la fase 1 junto con el registro y el login.
+ * Seguridad de la API.
+ * <ul>
+ *   <li>Rutas públicas y de autenticación abiertas; el resto exige un JWT válido.</li>
+ *   <li>El JWT lo valida el resource server de Spring Security (firma, emisor y caducidad).</li>
+ *   <li>{@code @EnableMethodSecurity} activa {@code @PreAuthorize} para exigir roles por endpoint.</li>
+ * </ul>
  */
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private static final String[] RUTAS_PUBLICAS = {
@@ -42,8 +52,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) throws Exception {
+        AuthenticationEntryPoint noAutenticado = (req, res, e) -> resolver.resolveException(req, res, null, e);
+
         return http
-                // API sin estado con JWT en cabecera: no hay cookie de sesión que proteger frente a CSRF
+                // El access token va en la cabecera Authorization, que el navegador no añade solo.
+                // La única cookie (refresh token) es SameSite=Strict y solo viaja a /api/auth.
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -52,10 +65,33 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(RUTAS_PUBLICAS).permitAll()
                         .anyRequest().authenticated())
+                .oauth2ResourceServer(oauth -> oauth
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                        .authenticationEntryPoint(noAutenticado))
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((req, res, e) -> resolver.resolveException(req, res, null, e))
+                        .authenticationEntryPoint(noAutenticado)
                         .accessDeniedHandler((req, res, e) -> resolver.resolveException(req, res, null, e)))
                 .build();
+    }
+
+    /** Convierte el claim "rol" del JWT en la autoridad ROLE_PROPIETARIO o ROLE_EMPLEADO. */
+    private static JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter roles = new JwtGrantedAuthoritiesConverter();
+        roles.setAuthoritiesClaimName(JwtService.CLAIM_ROL);
+        roles.setAuthorityPrefix("ROLE_");
+
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(roles);
+        return converter;
+    }
+
+    /**
+     * Codificador "delegante": guarda el algoritmo junto al hash ({bcrypt}$2a$...),
+     * así se podría migrar a otro algoritmo en el futuro sin invalidar las contraseñas actuales.
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
     @Bean

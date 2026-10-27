@@ -38,10 +38,10 @@
             <version>${springdoc.version}</version>
         </dependency>
 
-        <!-- Seguridad -->
+        <!-- Seguridad: Spring Security + validación de JWT (resource server) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
+            <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
         </dependency>
 
         <!-- Persistencia -->
