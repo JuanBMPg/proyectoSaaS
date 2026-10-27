@@ -1,18 +1,29 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatListModule } from '@angular/material/list';
+import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { map } from 'rxjs';
 
-import { Negocio } from '../core/api/modelos';
-import { NegocioApiService } from '../core/api/negocio-api.service';
 import { AuthService } from '../core/auth/auth.service';
 
-/**
- * Esqueleto del panel privado. De momento muestra el negocio y permite cerrar sesión;
- * la agenda, los servicios y los recursos llegarán en las siguientes tareas de la fase 1.
- */
+/** Layout del panel privado: barra superior, menú lateral y la página activa. */
 @Component({
   selector: 'app-panel',
-  imports: [MatButtonModule, MatToolbarModule],
+  imports: [
+    RouterLink,
+    RouterLinkActive,
+    RouterOutlet,
+    MatButtonModule,
+    MatIconModule,
+    MatListModule,
+    MatSidenavModule,
+    MatToolbarModule,
+  ],
   templateUrl: './panel.html',
   styleUrl: './panel.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,17 +31,14 @@ import { AuthService } from '../core/auth/auth.service';
 export class Panel {
   private readonly auth = inject(AuthService);
 
-  protected readonly rol = this.auth.rol;
-  protected readonly negocio = signal<Negocio | null>(null);
-
-  constructor() {
-    // Los datos del negocio solo los puede ver el propietario (el backend responde 403 al empleado)
-    if (this.auth.rol() === 'PROPIETARIO') {
-      inject(NegocioApiService)
-        .obtener()
-        .subscribe((negocio) => this.negocio.set(negocio));
-    }
-  }
+  /** En pantallas pequeñas el menú se superpone y se abre con un botón. */
+  protected readonly movil = toSignal(
+    inject(BreakpointObserver)
+      .observe([Breakpoints.XSmall, Breakpoints.Small])
+      .pipe(map((estado) => estado.matches)),
+    { initialValue: false },
+  );
+  protected readonly esPropietario = computed(() => this.auth.rol() === 'PROPIETARIO');
 
   protected cerrarSesion(): void {
     this.auth.logout().subscribe();

@@ -1,0 +1,28 @@
+<h2 mat-dialog-title>{{ recurso ? 'Editar recurso' : 'Nuevo recurso' }}</h2>
+
+<form [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+  <mat-dialog-content class="campos">
+    @if (error(); as mensaje) {
+      <p class="error" role="alert">{{ mensaje }}</p>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="nombre" />
+      <mat-hint>Una persona (Marta) o una cosa (Pista 2, Sala A)</mat-hint>
+      @if (formulario.controls.nombre.hasError('required')) {
+        <mat-error>Escribe el nombre del recurso</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-radio-group formControlName="tipo" aria-label="Tipo de recurso">
+      <mat-radio-button value="PERSONA">Persona</mat-radio-button>
+      <mat-radio-button value="COSA">Cosa</mat-radio-button>
+    </mat-radio-group>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close>Cancelar</button>
+    <button mat-flat-button type="submit" [disabled]="guardando()">Guardar</button>
+  </mat-dialog-actions>
+</form>

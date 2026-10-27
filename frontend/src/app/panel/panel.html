@@ -1,16 +1,58 @@
-<mat-toolbar>
-  <span class="titulo">{{ negocio()?.nombre ?? 'Panel' }}</span>
+<mat-toolbar class="barra">
+  @if (movil()) {
+    <button mat-icon-button type="button" aria-label="Abrir el menú" (click)="menu.toggle()">
+      <mat-icon>menu</mat-icon>
+    </button>
+  }
+  <span class="titulo">Reservas</span>
   <button mat-button type="button" (click)="cerrarSesion()">Cerrar sesión</button>
 </mat-toolbar>
 
-<main class="contenido">
-  <h1>Bienvenido al panel</h1>
-  @if (negocio(); as negocio) {
-    <p>
-      Tu página pública: <strong>/{{ negocio.slug }}</strong> · Zona horaria:
-      {{ negocio.zonaHoraria }}
-    </p>
-  } @else if (rol() === 'EMPLEADO') {
-    <p>Aquí verás tu agenda.</p>
-  }
-</main>
+<mat-sidenav-container class="contenedor">
+  <mat-sidenav #menu [mode]="movil() ? 'over' : 'side'" [opened]="!movil()">
+    <mat-nav-list>
+      <a
+        mat-list-item
+        routerLink="/panel"
+        routerLinkActive
+        #inicio="routerLinkActive"
+        [routerLinkActiveOptions]="{ exact: true }"
+        [activated]="inicio.isActive"
+        (click)="movil() && menu.close()"
+      >
+        <mat-icon matListItemIcon>home</mat-icon>
+        <span matListItemTitle>Inicio</span>
+      </a>
+      @if (esPropietario()) {
+        <a
+          mat-list-item
+          routerLink="/panel/servicios"
+          routerLinkActive
+          #servicios="routerLinkActive"
+          [activated]="servicios.isActive"
+          (click)="movil() && menu.close()"
+        >
+          <mat-icon matListItemIcon>content_cut</mat-icon>
+          <span matListItemTitle>Servicios</span>
+        </a>
+        <a
+          mat-list-item
+          routerLink="/panel/recursos"
+          routerLinkActive
+          #recursos="routerLinkActive"
+          [activated]="recursos.isActive"
+          (click)="movil() && menu.close()"
+        >
+          <mat-icon matListItemIcon>groups</mat-icon>
+          <span matListItemTitle>Recursos</span>
+        </a>
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <main class="contenido">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

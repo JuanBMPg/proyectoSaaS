@@ -1,0 +1,13 @@
+@if (negocio(); as negocio) {
+  <h1>{{ negocio.nombre }}</h1>
+  <p>
+    Tu página pública: <strong>/{{ negocio.slug }}</strong> · Zona horaria:
+    {{ negocio.zonaHoraria }}
+  </p>
+  <p>Para empezar a recibir reservas, configura qué ofreces y quién lo atiende:</p>
+  <a mat-flat-button routerLink="/panel/servicios">Servicios</a>
+  <a mat-button routerLink="/panel/recursos">Recursos</a>
+} @else if (rol() === 'EMPLEADO') {
+  <h1>Bienvenido</h1>
+  <p>Aquí verás tu agenda.</p>
+}

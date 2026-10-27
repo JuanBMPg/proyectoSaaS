@@ -19,9 +19,9 @@ export const routes: Routes = [
   },
   {
     path: 'panel',
-    title: 'Panel · Reservas',
     canActivate: [authGuard],
     loadComponent: () => import('./panel/panel').then((m) => m.Panel),
+    loadChildren: () => import('./panel/panel.routes').then((m) => m.panelRoutes),
   },
   // Se sustituirá por la página pública /:slug
   { path: '**', redirectTo: '' },
