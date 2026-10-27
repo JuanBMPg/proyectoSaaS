@@ -17,6 +17,7 @@ public record RegistroRequest(
         @NotBlank @Size(min = 3, max = 80)
         @Pattern(regexp = "^[a-z0-9]+(-[a-z0-9]+)*$",
                 message = "solo minúsculas, números y guiones (sin guiones al principio ni al final)")
+        @SlugPermitido
         String slug,
         @NotBlank @Size(max = 120) String nombre,
         @NotBlank @Email @Size(max = 160) String email,
