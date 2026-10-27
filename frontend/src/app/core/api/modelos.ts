@@ -81,3 +81,15 @@ export interface RecursoRequest {
   tipo: TipoRecurso;
   activo?: boolean | null;
 }
+
+/** Franja del horario semanal. Horas locales del negocio en formato "HH:mm". */
+export interface FranjaHoraria {
+  /** 1 = lunes ... 7 = domingo (ISO 8601). */
+  diaSemana: number;
+  horaInicio: string;
+  horaFin: string;
+}
+
+export interface Horario {
+  franjas: FranjaHoraria[];
+}
