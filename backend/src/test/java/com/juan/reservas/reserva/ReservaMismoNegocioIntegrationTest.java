@@ -11,22 +11,17 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-import com.juan.reservas.TestcontainersConfiguration;
+import com.juan.reservas.TestDeIntegracion;
 
 /**
  * Verifica las FKs compuestas de la migración V2: una reserva no puede usar el servicio,
  * el recurso ni el cliente de otro negocio, aunque el código tuviera un fallo de filtrado.
  */
-@Testcontainers(disabledWithoutDocker = true)
-@SpringBootTest
-@Import(TestcontainersConfiguration.class)
+@TestDeIntegracion
 @Transactional
 class ReservaMismoNegocioIntegrationTest {
 

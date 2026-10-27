@@ -12,14 +12,11 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-import com.juan.reservas.TestcontainersConfiguration;
+import com.juan.reservas.TestDeIntegracion;
 
 /**
  * Verifica contra un PostgreSQL real que la restricción de exclusión reserva_sin_solape
@@ -29,11 +26,8 @@ import com.juan.reservas.TestcontainersConfiguration;
  * la migración V1 y que la configuración de la aplicación es válida.
  * Usa SQL directo porque todavía no existen las entidades JPA (llegan en la fase 1).
  * Cada test se revierte al terminar gracias a {@code @Transactional}.
- * Si no hay Docker disponible el test se marca como omitido (en el CI siempre hay Docker).
  */
-@Testcontainers(disabledWithoutDocker = true)
-@SpringBootTest
-@Import(TestcontainersConfiguration.class)
+@TestDeIntegracion
 @Transactional
 class RestriccionSinSolapeIntegrationTest {
 

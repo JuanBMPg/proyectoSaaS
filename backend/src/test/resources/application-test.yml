@@ -1,0 +1,5 @@
+# Perfil de los tests de integración (activado por @TestDeIntegracion).
+# El secreto es solo para tests: no protege nada real.
+app:
+  auth:
+    jwt-secret: secreto-solo-para-tests-de-integracion-0123456789
