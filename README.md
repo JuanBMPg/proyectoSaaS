@@ -66,6 +66,9 @@ npm install
 npm start
 ```
 
+`npm start` redirige `/api` al backend mediante un proxy (`frontend/proxy.conf.json`), así que el navegador
+ve frontend y API en el mismo origen, igual que en producción detrás de Nginx.
+
 | Servicio | URL |
 | --- | --- |
 | Frontend | http://localhost:4200 |
@@ -93,7 +96,7 @@ se marcan como omitidos; en el CI se exige que se ejecuten.
 - [x] README inicial
 
 **Fase 1: MVP** (en curso)
-- [ ] Registro de negocio y login con JWT
+- [x] Registro de negocio y login con JWT
 - [ ] CRUD de servicios y recursos, y asignación servicio-recurso
 - [ ] Horario semanal por recurso
 - [ ] Calculadora de disponibilidad con tests unitarios
@@ -115,5 +118,7 @@ la fase 3 (pagos, estadísticas, plantillas de sector) y la fase 4 (widget, iCal
 - **Zonas horarias.** Los instantes se guardan en UTC (`timestamptz` / `Instant`) y los horarios semanales
   en hora local del negocio (`time` / `LocalTime`).
 - **Tiempo testeable.** Se inyecta un `java.time.Clock` en lugar de llamar a `Instant.now()`.
+- **Sesión segura.** El access token (JWT de 15 min) vive solo en memoria en el frontend; el refresh token
+  (7 días, rotado en cada uso y guardado como hash) viaja en una cookie `HttpOnly; SameSite=Strict`.
 - **Configuración sin secretos.** Todo llega por variables de entorno; `.env` está en `.gitignore`
   y `.env.example` documenta las variables.
