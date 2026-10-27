@@ -18,3 +18,10 @@ export const authGuard: CanActivateFn = (_ruta, estado) => {
 export const invitadoGuard: CanActivateFn = () => {
   return inject(AuthService).autenticado() ? inject(Router).createUrlTree(['/panel']) : true;
 };
+
+/** Páginas solo para el propietario; un empleado vuelve al inicio del panel. */
+export const propietarioGuard: CanActivateFn = () => {
+  return inject(AuthService).rol() === 'PROPIETARIO'
+    ? true
+    : inject(Router).createUrlTree(['/panel']);
+};

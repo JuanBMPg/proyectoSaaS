@@ -44,3 +44,40 @@ export interface ProblemDetail {
   detail?: string;
   errores?: Record<string, string>;
 }
+
+export interface Servicio {
+  id: string;
+  nombre: string;
+  descripcion: string | null;
+  duracionMin: number;
+  margenMin: number;
+  /** Precio en céntimos: 1500 = 15,00 €. */
+  precioCentimos: number;
+  activo: boolean;
+}
+
+export interface ServicioRequest {
+  nombre: string;
+  descripcion: string | null;
+  duracionMin: number;
+  margenMin: number;
+  precioCentimos: number;
+  /** Opcional: null deja el estado como está; true reactiva. */
+  activo?: boolean | null;
+}
+
+export type TipoRecurso = 'PERSONA' | 'COSA';
+
+export interface Recurso {
+  id: string;
+  nombre: string;
+  tipo: TipoRecurso;
+  activo: boolean;
+  servicioIds: string[];
+}
+
+export interface RecursoRequest {
+  nombre: string;
+  tipo: TipoRecurso;
+  activo?: boolean | null;
+}

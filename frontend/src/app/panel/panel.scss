@@ -1,13 +1,23 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .titulo {
   flex: 1;
 }
 
-.contenido {
-  padding: 24px 16px;
-  max-width: 960px;
-  margin: 0 auto;
+.contenedor {
+  flex: 1;
 }
 
-h1 {
-  font: var(--mat-sys-headline-small);
+mat-sidenav {
+  width: 220px;
+}
+
+.contenido {
+  padding: 24px 16px;
+  max-width: 1080px;
+  margin: 0 auto;
 }
