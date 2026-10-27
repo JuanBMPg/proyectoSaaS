@@ -30,8 +30,18 @@ jobs:
           cache: maven
 
       # Compila, ejecuta tests unitarios y de integración (Testcontainers usa el Docker del runner)
-      - name: Compilar y testear
+      # y comprueba con JaCoCo la cobertura mínima del paquete disponibilidad
+      - name: Compilar, testear y medir cobertura
         run: ./mvnw -B verify
+
+      # Informe HTML de cobertura descargable desde la ejecución del CI
+      - name: Subir informe de cobertura
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cobertura-backend
+          path: backend/target/site/jacoco/
+          if-no-files-found: ignore
 
       # En local los tests de integración se omiten si no hay Docker; en el CI deben ejecutarse siempre
       - name: Comprobar que no se ha omitido ningún test de integración
