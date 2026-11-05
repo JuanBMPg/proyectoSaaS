@@ -44,6 +44,9 @@ springdoc:
 # Configuración propia de la aplicación (ver config/AppProperties)
 app:
   frontend-url: ${FRONTEND_URL:http://localhost:4200}
+  # true: al arrancar crea el negocio de demostración si no existe (ver demo/DatosDemo)
+  demo:
+    habilitada: ${DEMO:false}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
   mail:

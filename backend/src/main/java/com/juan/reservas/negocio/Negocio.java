@@ -66,6 +66,13 @@ public class Negocio extends EntidadBase {
         this.creadoEn = creadoEn;
     }
 
+    /** Datos de contacto que se muestran en la página pública y en los emails. */
+    public void actualizarContacto(String email, String telefono, String direccion) {
+        this.email = email;
+        this.telefono = telefono;
+        this.direccion = direccion;
+    }
+
     public String getNombre() {
         return nombre;
     }
