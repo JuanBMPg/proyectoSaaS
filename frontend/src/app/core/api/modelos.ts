@@ -173,3 +173,36 @@ export interface ReservaCreada {
   token: string;
   reserva: ReservaPublica;
 }
+
+// --- Agenda del panel ---
+
+/** Una reserva vista por el personal: con los datos de contacto del cliente. */
+export interface ReservaPanel {
+  id: string;
+  estado: EstadoReserva;
+  inicio: string;
+  fin: string;
+  finBloqueo: string;
+  notas: string | null;
+  servicio: { id: string; nombre: string; precioCentimos: number };
+  recurso: { id: string; nombre: string };
+  cliente: { nombre: string; email: string; telefono: string | null };
+}
+
+export type ReservaManualRequest = ReservaPublicaRequest;
+
+export interface Empleado {
+  id: string;
+  nombre: string;
+  email: string;
+  activo: boolean;
+  recurso: { id: string; nombre: string } | null;
+}
+
+export interface EmpleadoRequest {
+  nombre: string;
+  email: string;
+  /** Contraseña inicial que el propietario comunica al empleado. */
+  password: string;
+  recursoId: string;
+}
