@@ -1,0 +1,35 @@
+<header class="cabecera">
+  <h1>Agenda</h1>
+  <div class="herramientas">
+    @if (esPropietario() && recursos().length > 1) {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filtro">
+        <mat-label>Ver</mat-label>
+        <mat-select [value]="recursoFiltro()" (selectionChange)="filtrar($event.value)">
+          <mat-option [value]="null">Todo el negocio</mat-option>
+          @for (recurso of recursos(); track recurso.id) {
+            <mat-option [value]="recurso.id">{{ recurso.nombre }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+    <button mat-flat-button type="button" (click)="nuevaReserva()" [disabled]="!negocio()">
+      <mat-icon>add</mat-icon> Nueva reserva
+    </button>
+  </div>
+</header>
+
+@if (error(); as mensaje) {
+  <p class="error" role="alert">{{ mensaje }}</p>
+}
+
+@if (opciones(); as opciones) {
+  <div class="calendario">
+    <full-calendar [options]="opciones" />
+  </div>
+  <p class="leyenda">
+    <span class="muestra reserva-confirmada"></span> Confirmada
+    <span class="muestra reserva-pendiente"></span> Pendiente
+    <span class="muestra reserva-completada"></span> Completada
+    <span class="muestra reserva-cancelada"></span> Cancelada o no presentado
+  </p>
+}

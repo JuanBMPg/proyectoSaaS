@@ -23,6 +23,17 @@
         <mat-icon matListItemIcon>home</mat-icon>
         <span matListItemTitle>Inicio</span>
       </a>
+      <a
+        mat-list-item
+        routerLink="/panel/agenda"
+        routerLinkActive
+        #agenda="routerLinkActive"
+        [activated]="agenda.isActive"
+        (click)="movil() && menu.close()"
+      >
+        <mat-icon matListItemIcon>calendar_month</mat-icon>
+        <span matListItemTitle>Agenda</span>
+      </a>
       @if (esPropietario()) {
         <a
           mat-list-item
@@ -45,6 +56,17 @@
         >
           <mat-icon matListItemIcon>groups</mat-icon>
           <span matListItemTitle>Recursos</span>
+        </a>
+        <a
+          mat-list-item
+          routerLink="/panel/empleados"
+          routerLinkActive
+          #empleados="routerLinkActive"
+          [activated]="empleados.isActive"
+          (click)="movil() && menu.close()"
+        >
+          <mat-icon matListItemIcon>badge</mat-icon>
+          <span matListItemTitle>Empleados</span>
         </a>
       }
     </mat-nav-list>

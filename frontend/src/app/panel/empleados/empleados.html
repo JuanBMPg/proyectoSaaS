@@ -1,0 +1,43 @@
+<header class="cabecera">
+  <h1>Empleados</h1>
+  <button
+    mat-flat-button
+    type="button"
+    (click)="nuevo()"
+    [disabled]="recursosLibres().length === 0"
+  >
+    <mat-icon>person_add</mat-icon> Nuevo empleado
+  </button>
+</header>
+
+@if (!cargando() && recursosLibres().length === 0 && empleados().length === 0) {
+  <p class="vacio">
+    Para dar de alta un empleado, primero crea en Recursos el recurso con el que trabajará.
+  </p>
+} @else if (!cargando() && empleados().length === 0) {
+  <p class="vacio">
+    Aún no tienes empleados. Cada empleado entra al panel con su email y ve solo su agenda.
+  </p>
+} @else {
+  <table mat-table [dataSource]="empleados()" class="tabla">
+    <ng-container matColumnDef="nombre">
+      <th mat-header-cell *matHeaderCellDef>Nombre</th>
+      <td mat-cell *matCellDef="let empleado">{{ empleado.nombre }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="email">
+      <th mat-header-cell *matHeaderCellDef>Email</th>
+      <td mat-cell *matCellDef="let empleado">{{ empleado.email }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="recurso">
+      <th mat-header-cell *matHeaderCellDef>Su agenda</th>
+      <td mat-cell *matCellDef="let empleado">
+        {{ empleado.recurso?.nombre ?? 'Sin asignar' }}
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+    <tr mat-row *matRowDef="let empleado; columns: columnas"></tr>
+  </table>
+}

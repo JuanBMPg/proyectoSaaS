@@ -10,6 +10,17 @@ export const panelRoutes: Routes = [
     loadComponent: () => import('./inicio/inicio').then((m) => m.Inicio),
   },
   {
+    path: 'agenda',
+    title: 'Agenda · Reservas',
+    loadComponent: () => import('./agenda/agenda').then((m) => m.Agenda),
+  },
+  {
+    path: 'empleados',
+    title: 'Empleados · Reservas',
+    canActivate: [propietarioGuard],
+    loadComponent: () => import('./empleados/empleados').then((m) => m.Empleados),
+  },
+  {
     path: 'servicios',
     title: 'Servicios · Reservas',
     canActivate: [propietarioGuard],

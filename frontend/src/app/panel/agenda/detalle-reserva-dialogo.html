@@ -1,0 +1,47 @@
+<h2 mat-dialog-title>{{ reserva.servicio.nombre }}</h2>
+
+<mat-dialog-content class="campos">
+  @if (error(); as mensaje) {
+    <p class="error" role="alert">{{ mensaje }}</p>
+  }
+
+  <p class="estado-reserva" [attr.data-estado]="reserva.estado" role="status">
+    {{ etiquetaEstado[reserva.estado] }}
+  </p>
+
+  <dl class="detalle-reserva">
+    <dt>Cuándo</dt>
+    <dd>{{ cuando().dia }}, {{ cuando().desde }} – {{ cuando().hasta }}</dd>
+    <dt>Con</dt>
+    <dd>{{ reserva.recurso.nombre }}</dd>
+    <dt>Cliente</dt>
+    <dd>
+      {{ reserva.cliente.nombre }}<br />
+      <span class="secundario">{{ reserva.cliente.email }}</span>
+      @if (reserva.cliente.telefono) {
+        <br /><span class="secundario">{{ reserva.cliente.telefono }}</span>
+      }
+    </dd>
+    <dt>Precio</dt>
+    <dd>{{ centimosAEuros(reserva.servicio.precioCentimos) | currency: 'EUR' }}</dd>
+    @if (reserva.notas) {
+      <dt>Nota</dt>
+      <dd>{{ reserva.notas }}</dd>
+    }
+  </dl>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="acciones-estado">
+  <button mat-button type="button" mat-dialog-close>Cerrar</button>
+  @for (estado of acciones; track estado) {
+    <button
+      type="button"
+      [attr.data-accion]="estado"
+      [disabled]="guardando()"
+      (click)="cambiarA(estado)"
+      mat-stroked-button
+    >
+      {{ accionEstado[estado] }}
+    </button>
+  }
+</mat-dialog-actions>

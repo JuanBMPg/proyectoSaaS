@@ -1,0 +1,88 @@
+.cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  margin-bottom: 16px;
+}
+
+h1 {
+  margin: 0;
+  font: var(--mat-sys-headline-small);
+}
+
+.herramientas {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.filtro {
+  min-width: 200px;
+}
+
+.calendario {
+  // La cabecera de FullCalendar no cabe en pantallas muy estrechas: se desplaza ella sola
+  overflow-x: auto;
+}
+
+.error {
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin-top: 12px;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.muestra {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  margin-right: -8px;
+}
+
+// Colores por estado. Los eventos se pintan dentro de FullCalendar (fuera del encapsulado
+// de estilos de Angular), así que se alcanzan con ::ng-deep.
+:host ::ng-deep {
+  .reserva-confirmada {
+    background: var(--mat-sys-primary);
+    border-color: var(--mat-sys-primary);
+    color: var(--mat-sys-on-primary);
+  }
+
+  .reserva-pendiente {
+    background: var(--mat-sys-tertiary);
+    border-color: var(--mat-sys-tertiary);
+    color: var(--mat-sys-on-tertiary);
+  }
+
+  .reserva-completada {
+    background: var(--mat-sys-secondary-container);
+    border-color: var(--mat-sys-secondary);
+    color: var(--mat-sys-on-secondary-container);
+  }
+
+  .reserva-cancelada,
+  .reserva-no_presentado {
+    background: var(--mat-sys-surface-container-highest);
+    border-color: var(--mat-sys-outline-variant);
+    color: var(--mat-sys-on-surface-variant);
+    text-decoration: line-through;
+  }
+
+  .fc-event {
+    cursor: pointer;
+  }
+}

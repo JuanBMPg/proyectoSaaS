@@ -28,3 +28,45 @@
 .secundario {
   color: var(--mat-sys-on-surface-variant);
 }
+
+// Detalle de una reserva de la agenda
+.estado-reserva {
+  align-self: flex-start;
+  margin: 0 0 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font: var(--mat-sys-label-large);
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+
+  &[data-estado='PENDIENTE'] {
+    background: var(--mat-sys-tertiary-container);
+    color: var(--mat-sys-on-tertiary-container);
+  }
+
+  &[data-estado='CANCELADA'],
+  &[data-estado='NO_PRESENTADO'] {
+    background: var(--mat-sys-surface-container-highest);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.detalle-reserva {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 8px 12px;
+  margin: 0;
+
+  dt {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.acciones-estado {
+  flex-wrap: wrap;
+  gap: 8px;
+}

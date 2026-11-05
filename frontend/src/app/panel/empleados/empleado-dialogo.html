@@ -1,0 +1,53 @@
+<h2 mat-dialog-title>Nuevo empleado</h2>
+
+<form [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+  <mat-dialog-content class="campos">
+    @if (error(); as mensaje) {
+      <p class="error" role="alert">{{ mensaje }}</p>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="nombre" />
+      @if (formulario.controls.nombre.hasError('required')) {
+        <mat-error>Escribe su nombre</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput type="email" formControlName="email" autocomplete="off" />
+      <mat-hint>Lo usará para entrar al panel</mat-hint>
+      @if (formulario.controls.email.invalid) {
+        <mat-error>Escribe un email válido</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Contraseña inicial</mat-label>
+      <input matInput type="password" formControlName="password" autocomplete="new-password" />
+      <mat-hint>Entre 8 y 72 caracteres. Comunícasela al empleado.</mat-hint>
+      @if (formulario.controls.password.invalid) {
+        <mat-error>Entre 8 y 72 caracteres</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Su agenda</mat-label>
+      <mat-select formControlName="recursoId">
+        @for (recurso of datos.recursosLibres; track recurso.id) {
+          <mat-option [value]="recurso.id">{{ recurso.nombre }}</mat-option>
+        }
+      </mat-select>
+      <mat-hint>El recurso cuyas reservas verá y gestionará</mat-hint>
+      @if (formulario.controls.recursoId.hasError('required')) {
+        <mat-error>Elige su recurso</mat-error>
+      }
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close>Cancelar</button>
+    <button mat-flat-button type="submit" [disabled]="guardando()">Dar de alta</button>
+  </mat-dialog-actions>
+</form>
