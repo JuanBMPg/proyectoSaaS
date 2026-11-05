@@ -7,6 +7,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Locale;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,17 +52,20 @@ public class ReservaService {
     private final ClienteRepository clienteRepository;
     private final ReservaRepository repository;
     private final DisponibilidadService disponibilidadService;
+    private final ApplicationEventPublisher eventos;
     private final Clock clock;
 
     public ReservaService(NegocioRepository negocioRepository, ServicioRepository servicioRepository,
             RecursoRepository recursoRepository, ClienteRepository clienteRepository,
-            ReservaRepository repository, DisponibilidadService disponibilidadService, Clock clock) {
+            ReservaRepository repository, DisponibilidadService disponibilidadService,
+            ApplicationEventPublisher eventos, Clock clock) {
         this.negocioRepository = negocioRepository;
         this.servicioRepository = servicioRepository;
         this.recursoRepository = recursoRepository;
         this.clienteRepository = clienteRepository;
         this.repository = repository;
         this.disponibilidadService = disponibilidadService;
+        this.eventos = eventos;
         this.clock = clock;
     }
 
@@ -107,6 +111,9 @@ public class ReservaService {
         //    por reserva_sin_solape, la excepción sale de aquí y se traduce a 409, en vez de
         //    aparecer más tarde al confirmar la transacción
         repository.saveAndFlush(reserva);
+
+        // 7. Aviso para el email de confirmación: el listener solo actúa si la transacción se confirma
+        eventos.publishEvent(new ReservaCreada(reserva.getId(), token));
         return new ReservaCreadaDto(token, aDto(reserva));
     }
 

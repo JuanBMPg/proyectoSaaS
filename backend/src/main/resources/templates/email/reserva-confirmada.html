@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${servicio}">Tu cita</title>
+</head>
+<!-- Estilos en línea y tablas: muchos programas de correo ignoran las hojas de estilo -->
+<body style="margin:0; padding:24px 12px; background:#f4f6f5; font-family:Arial, Helvetica, sans-serif; color:#1c2420;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px; margin:0 auto; background:#ffffff; border-radius:12px;">
+    <tr>
+      <td style="padding:28px 24px;">
+        <p style="margin:0 0 16px; font-size:16px;">Hola, <span th:text="${cliente}">Juan</span>:</p>
+
+        <p th:if="${confirmada}" style="margin:0 0 20px; font-size:16px;">
+          Tu cita está <strong>confirmada</strong>.
+        </p>
+        <p th:unless="${confirmada}" style="margin:0 0 20px; font-size:16px;">
+          Hemos recibido tu solicitud. <strong th:text="${negocio}">El negocio</strong> la confirmará
+          y te avisaremos.
+        </p>
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#dcefe8; border-radius:8px;">
+          <tr>
+            <td style="padding:16px 18px; font-size:15px; line-height:1.6;">
+              <strong style="font-size:17px;" th:text="${servicio}">Corte de pelo</strong><br>
+              <span th:text="|${dia} · ${horaInicio} – ${horaFin}|">Lunes 9 de noviembre · 10:00 – 10:30</span><br>
+              <span th:text="|Con ${recurso} · ${precio}|">Con Marta · 15,00 €</span><br>
+              <span th:text="${negocio}">Peluquería Lola</span><span th:if="${direccion}" th:text="| · ${direccion}|"> · C/ Mayor 12</span>
+            </td>
+          </tr>
+        </table>
+
+        <p style="margin:24px 0;">
+          <a th:href="${enlace}" href="#"
+             style="display:inline-block; background:#23695a; color:#ffffff; text-decoration:none; padding:11px 20px; border-radius:6px; font-weight:bold;">
+            Ver mi reserva
+          </a>
+        </p>
+
+        <p style="margin:0; font-size:13px; color:#5b6862;">
+          Guarda este email: el enlace es la forma de consultar tu cita.
+          <span th:if="${telefono}" th:text="|Si necesitas algo, llama a ${negocio} al ${telefono}.|"></span>
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
