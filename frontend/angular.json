@@ -30,7 +30,12 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.scss"]
+            "styles": [
+              "@fullcalendar/angular/skeleton.css",
+              "@fullcalendar/angular/themes/monarch/theme.css",
+              "@fullcalendar/angular/themes/monarch/palettes/green.css",
+              "src/styles.scss"
+            ]
           },
           "configurations": {
             "production": {
