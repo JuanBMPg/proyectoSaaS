@@ -27,54 +27,76 @@ Es un proyecto personal de portfolio y está en desarrollo.
 | Mapeo | MapStruct (las entidades JPA nunca salen del backend; la API usa DTOs `record`) |
 | Frontend | Angular 22 (componentes standalone y signals) + Angular Material |
 | Tests | JUnit, Mockito y Testcontainers en el backend; Vitest en el frontend |
-| Infraestructura | Docker Compose y GitHub Actions |
+| Infraestructura | Docker (imágenes multi-stage, Nginx), Docker Compose y GitHub Actions |
 
 ## Estructura
 
 ```
 .
-├── backend/              # API Spring Boot, organizada por funcionalidad
-│   └── src/main/
-│       ├── java/com/juan/reservas/
-│       │   ├── config/   # Seguridad, CORS, OpenAPI, reloj (Clock)
-│       │   └── comun/    # Errores y Problem Details
-│       └── resources/db/migration/   # Migraciones Flyway
-├── frontend/             # Aplicación Angular
-├── docker-compose.yml    # PostgreSQL y Mailpit para desarrollo
-└── .github/workflows/    # CI
+├── backend/                 # API Spring Boot, organizada por funcionalidad
+│   ├── Dockerfile           # Compila con el JDK y ejecuta con el JRE
+│   └── src/main/java/com/juan/reservas/
+│       ├── auth/            # Registro, login, JWT y refresh tokens
+│       ├── negocio/ servicio/ recurso/ empleado/ cliente/
+│       ├── reserva/         # Reservas: web pública, agenda del panel y estados
+│       ├── disponibilidad/  # CalculadoraDisponibilidad (lógica pura) y su carga de datos
+│       ├── publico/         # Endpoints de la página pública
+│       ├── notificacion/    # Email de confirmación (plantillas Thymeleaf)
+│       ├── demo/            # Negocio de demostración (opcional, DEMO=true)
+│       ├── config/ comun/   # Seguridad, CORS, OpenAPI, Clock; errores y utilidades
+│       └── ../resources/db/migration/   # Migraciones Flyway
+├── frontend/                # Angular: panel privado y página pública
+│   ├── Dockerfile           # Compila con Node y sirve con Nginx
+│   └── nginx.conf.template  # Sirve la SPA y hace de proxy de /api
+├── docker-compose.yml       # PostgreSQL, Mailpit, backend y frontend
+└── .github/workflows/       # CI: tests, lint, cobertura e imágenes Docker
 ```
 
 ## Arrancar en local
 
-**Requisitos:** JDK 21, Node 24.15 o superior, y Docker con Docker Compose. Maven no hace falta,
-porque el proyecto incluye el Maven Wrapper (`mvnw`).
+Primero, las variables de entorno: copia el ejemplo y rellena `DB_PASSWORD` y `JWT_SECRET`
+(genera uno con `openssl rand -base64 48`).
 
 ```bash
-# 1. Variables de entorno: copia el ejemplo y rellena DB_PASSWORD y JWT_SECRET (openssl rand -base64 48)
 cp .env.example .env
-
-# 2. Infraestructura: PostgreSQL y Mailpit
-docker compose up -d
-
-# 3. Backend en http://localhost:8080 (aplica las migraciones al arrancar)
-cd backend
-./mvnw spring-boot:run        # en Windows: mvnw.cmd spring-boot:run
-
-# 4. Frontend en http://localhost:4200
-cd frontend
-npm install
-npm start
 ```
 
-`npm start` redirige `/api` al backend mediante un proxy (`frontend/proxy.conf.json`), así que el navegador
-ve frontend y API en el mismo origen, igual que en producción detrás de Nginx.
+### Opción 1: todo con Docker
 
-| Servicio | URL |
-| --- | --- |
-| Frontend | http://localhost:4200 |
-| API | http://localhost:8080/api |
-| Swagger UI | http://localhost:8080/swagger-ui.html |
-| Mailpit (emails de prueba) | http://localhost:8025 |
+```bash
+docker compose up --build
+```
+
+Levanta PostgreSQL, Mailpit, el backend y el frontend, con el negocio de demostración ya cargado.
+La aplicación queda en **http://localhost:8081**.
+
+### Opción 2: para desarrollar
+
+Requisitos: JDK 21, Node 24.15 o superior y Docker. Maven no hace falta, el proyecto incluye el Maven Wrapper.
+
+```bash
+docker compose up -d postgres mailpit     # solo la infraestructura
+
+cd backend && ./mvnw spring-boot:run      # API en http://localhost:8080 (Windows: mvnw.cmd)
+cd frontend && npm install && npm start   # web en http://localhost:4200
+```
+
+`npm start` redirige `/api` al backend con un proxy, así que el navegador ve frontend y API en el mismo
+origen, igual que con Nginx. Con `DEMO=true` en el `.env`, el backend crea el negocio de demostración al arrancar.
+
+| Servicio | Docker | Desarrollo |
+| --- | --- | --- |
+| Web | http://localhost:8081 | http://localhost:4200 |
+| Swagger UI | http://localhost:8081/swagger-ui.html | http://localhost:8080/swagger-ui.html |
+| Mailpit (emails de prueba) | http://localhost:8025 | http://localhost:8025 |
+
+### Cuentas de demostración
+
+| Quién | Dónde | Email | Contraseña |
+| --- | --- | --- | --- |
+| Cliente (sin cuenta) | `/peluqueria-lola` | — | — |
+| Propietaria | `/login` | `demo@reservas.local` | `demo12345` |
+| Empleada (solo su agenda) | `/login` | `marta@reservas.local` | `demo12345` |
 
 ### Tests
 
@@ -83,11 +105,23 @@ cd backend && ./mvnw verify                 # unitarios + integración (necesita
 cd frontend && npm run lint && npm test
 ```
 
-Los tests de integración levantan un PostgreSQL real con Testcontainers. Si no hay Docker disponible
-se marcan como omitidos; en el CI se exige que se ejecuten.
+Los tests de integración levantan PostgreSQL y Mailpit reales con Testcontainers. Si no hay Docker
+disponible se marcan como omitidos; en el CI se exige que se ejecuten.
 
 `mvnw verify` mide la cobertura con JaCoCo (informe en `backend/target/site/jacoco/index.html`) y falla si el
 paquete `disponibilidad`, el núcleo del producto, baja del 80 % de líneas o de ramas.
+
+## Despliegue
+
+Las dos imágenes están listas para cualquier servicio que ejecute contenedores (Railway, Render, un VPS...):
+
+1. Una base de datos PostgreSQL 16 gestionada.
+2. El **backend** desde `backend/Dockerfile`, con `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`,
+   `DB_PASSWORD`, `JWT_SECRET`, `MAIL_HOST`/`MAIL_PORT` (un SMTP real), `MAIL_FROM`,
+   `FRONTEND_URL` (la dirección pública de la web) y `DEMO=true` para la demo.
+3. El **frontend** desde `frontend/Dockerfile`, con `BACKEND_URL` apuntando a la dirección interna del backend.
+   Es el único servicio público: Nginx sirve la web y reenvía `/api`, así que la cookie de sesión funciona
+   en el mismo dominio y no hace falta CORS.
 
 ## Estado del proyecto
 
@@ -98,7 +132,7 @@ paquete `disponibilidad`, el núcleo del producto, baja del 80 % de líneas o de
 - [x] CI en GitHub Actions: compilar, lint y tests de ambos proyectos
 - [x] README inicial
 
-**Fase 1: MVP** (en curso)
+**Fase 1: MVP** ✅
 - [x] Registro de negocio y login con JWT
 - [x] CRUD de servicios y recursos, y asignación servicio-recurso
 - [x] Horario semanal por recurso
@@ -108,10 +142,16 @@ paquete `disponibilidad`, el núcleo del producto, baja del 80 % de líneas o de
 - [x] Email de confirmación con el enlace a la reserva
 - [x] Agenda del panel con FullCalendar
 - [x] Empleados con acceso solo a su agenda
-- [ ] Datos de demo y despliegue público
+- [x] Datos de demo e imágenes Docker listas para desplegar (falta publicar la demo en un hosting)
 
-Después vienen la fase 2 (excepciones de horario, recordatorios, confirmación manual y e2e),
-la fase 3 (pagos, estadísticas, plantillas de sector) y la fase 4 (widget, iCal, lista de espera).
+**Fase 2: automatización** (siguiente)
+- [ ] Excepciones: vacaciones, festivos y horarios especiales
+- [ ] Recordatorios automáticos 24 h antes con tarea programada
+- [ ] Cancelación por enlace respetando el plazo
+- [ ] Confirmación manual para negocios que la activen
+- [ ] Tests e2e con Playwright del flujo de reserva
+
+Después vienen la fase 3 (pagos, estadísticas, plantillas de sector) y la fase 4 (widget, iCal, lista de espera).
 
 ## Decisiones técnicas
 
