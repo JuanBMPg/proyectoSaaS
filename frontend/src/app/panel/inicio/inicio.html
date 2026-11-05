@@ -7,7 +7,9 @@
   <p>Para empezar a recibir reservas, configura qué ofreces y quién lo atiende:</p>
   <a mat-flat-button routerLink="/panel/servicios">Servicios</a>
   <a mat-button routerLink="/panel/recursos">Recursos</a>
+  <a mat-button routerLink="/panel/agenda">Ver la agenda</a>
 } @else if (rol() === 'EMPLEADO') {
   <h1>Bienvenido</h1>
-  <p>Aquí verás tu agenda.</p>
+  <p>Tus citas están en la agenda.</p>
+  <a mat-flat-button routerLink="/panel/agenda">Ver mi agenda</a>
 }
