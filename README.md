@@ -105,7 +105,7 @@ paquete `disponibilidad`, el núcleo del producto, baja del 80 % de líneas o de
 - [x] Calculadora de disponibilidad con tests unitarios
 - [x] Página pública `/:slug`: elegir servicio, profesional, día y hora
 - [x] Crear reserva con protección contra dobles reservas
-- [ ] Email de confirmación con enlace de cancelación
+- [x] Email de confirmación con el enlace a la reserva
 - [ ] Agenda del panel con FullCalendar
 - [ ] Empleados con acceso solo a su agenda
 - [ ] Datos de demo y despliegue público
@@ -129,5 +129,8 @@ la fase 3 (pagos, estadísticas, plantillas de sector) y la fase 4 (widget, iCal
 - **Tiempo testeable.** Se inyecta un `java.time.Clock` en lugar de llamar a `Instant.now()`.
 - **Sesión segura.** El access token (JWT de 15 min) vive solo en memoria en el frontend; el refresh token
   (7 días, rotado en cada uso y guardado como hash) viaja en una cookie `HttpOnly; SameSite=Strict`.
+- **Emails solo de reservas que existen.** El email de confirmación lo envía un `@TransactionalEventListener`
+  en fase `AFTER_COMMIT` y `@Async`: si la reserva no llega a guardarse no sale ningún correo, y el cliente no
+  espera al servidor de correo. En local los emails se ven en Mailpit (http://localhost:8025).
 - **Configuración sin secretos.** Todo llega por variables de entorno; `.env` está en `.gitignore`
   y `.env.example` documenta las variables.
