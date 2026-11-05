@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.UUID;
 
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -67,6 +68,39 @@ public class NegocioDePrueba {
                         .content("{\"franjas\": [{\"diaSemana\": %d, \"horaInicio\": \"%s\", \"horaFin\": \"%s\"}]}"
                                 .formatted(fecha.getDayOfWeek().getValue(), inicio, fin)))
                 .andExpect(status().isOk());
+    }
+
+    /**
+     * Da de alta un empleado vinculado a un recurso (con la API del panel) e inicia su sesión.
+     */
+    public SesionDePrueba crearEmpleado(String recursoId) throws Exception {
+        String email = "empleado-" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
+        mvc.perform(propietario.autenticar(post("/api/panel/empleados"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nombre": "Empleado", "email": "%s", "password": "%s", "recursoId": "%s"}
+                                """.formatted(email, SesionDePrueba.PASSWORD, recursoId)))
+                .andExpect(status().isCreated());
+        String respuesta = mvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\": \"%s\", \"password\": \"%s\"}".formatted(email, SesionDePrueba.PASSWORD)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return new SesionDePrueba(JsonPath.read(respuesta, "$.accessToken"), slug(), email);
+    }
+
+    /** Reserva desde la web pública (como un cliente) y devuelve el token de su enlace. */
+    public String reservarComoCliente(String servicioId, String recursoId, Instant inicio, String email)
+            throws Exception {
+        String respuesta = mvc.perform(post("/api/publico/" + slug() + "/reservas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"servicioId": "%s", "recursoId": "%s", "inicio": "%s",
+                                 "nombre": "Cliente", "email": "%s", "telefono": null}
+                                """.formatted(servicioId, recursoId, inicio, email)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return JsonPath.read(respuesta, "$.token");
     }
 
     /** Instante de una hora local de Madrid en esa fecha. */
