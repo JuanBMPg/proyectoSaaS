@@ -24,10 +24,13 @@ public class NegocioController {
         this.service = service;
     }
 
-    /** El negocio sale del token: no hay forma de pedir el de otro. */
+    /**
+     * El negocio sale del token: no hay forma de pedir el de otro. Lo pueden leer también los
+     * empleados: la agenda necesita su zona horaria y la reserva manual su slug.
+     */
     @Operation(summary = "Datos y reglas del negocio del usuario")
     @GetMapping
-    @PreAuthorize("hasRole('PROPIETARIO')")
+    @PreAuthorize("hasAnyRole('PROPIETARIO', 'EMPLEADO')")
     public NegocioDto obtener(UsuarioActual usuario) {
         return service.obtener(usuario.negocioId());
     }

@@ -157,7 +157,7 @@ class AuthIntegrationTest {
     }
 
     @Test
-    void unEmpleadoNoPuedeVerLosDatosDelNegocio() throws Exception {
+    void unEmpleadoVeLosDatosDeSuNegocioPeroNoPuedeGestionarServicios() throws Exception {
         registrar();
         Negocio negocio = negocioRepository.findBySlug(slug).orElseThrow();
         String emailEmpleado = "empleado-" + email;
@@ -166,6 +166,9 @@ class AuthIntegrationTest {
         String tokenEmpleado = accessToken(login(emailEmpleado));
 
         mvc.perform(get("/api/panel/negocio").header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenEmpleado))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.slug").value(slug));
+        mvc.perform(get("/api/panel/servicios").header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenEmpleado))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403));
     }
