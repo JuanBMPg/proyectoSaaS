@@ -106,8 +106,8 @@ paquete `disponibilidad`, el núcleo del producto, baja del 80 % de líneas o de
 - [x] Página pública `/:slug`: elegir servicio, profesional, día y hora
 - [x] Crear reserva con protección contra dobles reservas
 - [x] Email de confirmación con el enlace a la reserva
-- [ ] Agenda del panel con FullCalendar
-- [ ] Empleados con acceso solo a su agenda
+- [x] Agenda del panel con FullCalendar
+- [x] Empleados con acceso solo a su agenda
 - [ ] Datos de demo y despliegue público
 
 Después vienen la fase 2 (excepciones de horario, recordatorios, confirmación manual y e2e),
