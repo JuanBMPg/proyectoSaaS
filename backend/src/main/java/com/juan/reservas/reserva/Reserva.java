@@ -4,6 +4,7 @@ import java.time.Instant;
 
 import com.juan.reservas.cliente.Cliente;
 import com.juan.reservas.comun.EntidadBase;
+import com.juan.reservas.comun.ReglaNegocioException;
 import com.juan.reservas.negocio.Negocio;
 import com.juan.reservas.recurso.Recurso;
 import com.juan.reservas.servicio.Servicio;
@@ -88,6 +89,17 @@ public class Reserva extends EntidadBase {
         this.notas = notas;
         this.tokenHash = tokenHash;
         this.creadoEn = creadoEn;
+    }
+
+    /**
+     * @throws ReglaNegocioException si el cambio no está permitido
+     */
+    public void cambiarEstado(EstadoReserva nuevo) {
+        if (!estado.puedePasarA(nuevo)) {
+            throw new ReglaNegocioException(
+                    "Una reserva " + estado.name().toLowerCase() + " no puede pasar a " + nuevo.name().toLowerCase());
+        }
+        this.estado = nuevo;
     }
 
     public Negocio getNegocio() {
