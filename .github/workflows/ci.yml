@@ -77,3 +77,16 @@ jobs:
 
       - name: Build de producción
         run: npm run build
+
+  imagenes:
+    name: Imágenes Docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Comprueba que los Dockerfile siguen construyendo (no se publican)
+      - name: Construir la imagen del backend
+        run: docker build -t reservas-backend backend
+
+      - name: Construir la imagen del frontend
+        run: docker build -t reservas-frontend frontend
