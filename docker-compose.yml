@@ -1,6 +1,11 @@
-# Servicios de infraestructura para desarrollo local.
-# Uso: copia .env.example a .env y ejecuta `docker compose up -d`.
-# El backend y el frontend se añadirán aquí cuando tengan su Dockerfile.
+# La aplicación completa con un comando. Copia .env.example a .env, rellena DB_PASSWORD y
+# JWT_SECRET, y:
+#
+#   docker compose up --build         → toda la aplicación en http://localhost:8081
+#                                        (con el negocio de demostración /peluqueria-lola)
+#   docker compose up -d postgres mailpit
+#                                      → solo la infraestructura, para desarrollar con
+#                                        mvnw spring-boot:run y npm start
 
 services:
   postgres:
@@ -34,6 +39,45 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  backend:
+    build: ./backend
+    container_name: reservas-backend
+    # Sin puerto publicado: solo se llega a través de Nginx (servicio frontend)
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-reservas}
+      DB_USERNAME: ${DB_USERNAME:-reservas}
+      DB_PASSWORD: ${DB_PASSWORD}
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      MAIL_FROM: ${MAIL_FROM:-no-responder@reservas.local}
+      JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET en el fichero .env}
+      FRONTEND_URL: http://localhost:${FRONTEND_PORT:-8081}
+      DEMO: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mailpit:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8080/v3/api-docs"]
+      interval: 10s
+      timeout: 5s
+      start_period: 40s
+      retries: 10
+
+  frontend:
+    build: ./frontend
+    container_name: reservas-frontend
+    environment:
+      BACKEND_URL: http://backend:8080
+    ports:
+      - "${FRONTEND_PORT:-8081}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
 
 volumes:
   postgres-data:
