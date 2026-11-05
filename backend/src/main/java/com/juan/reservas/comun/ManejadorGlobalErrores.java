@@ -41,6 +41,11 @@ public class ManejadorGlobalErrores extends ResponseEntityExceptionHandler {
         return problema(HttpStatus.NOT_FOUND, "No encontrado", ex.getMessage());
     }
 
+    @ExceptionHandler(PeticionIncorrectaException.class)
+    public ProblemDetail peticionIncorrecta(PeticionIncorrectaException ex) {
+        return problema(HttpStatus.BAD_REQUEST, "Petición incorrecta", ex.getMessage());
+    }
+
     @ExceptionHandler(NoAutorizadoException.class)
     public ProblemDetail noAutorizado(NoAutorizadoException ex) {
         return problema(HttpStatus.UNAUTHORIZED, "No autenticado", ex.getMessage());

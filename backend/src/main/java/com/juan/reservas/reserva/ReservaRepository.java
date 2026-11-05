@@ -13,6 +13,27 @@ public interface ReservaRepository extends JpaRepository<Reserva, UUID> {
 
     Optional<Reserva> findByTokenHash(String tokenHash);
 
+    /** Reservas de la agenda del negocio que se cruzan con [desde, hasta), con sus datos en una consulta. */
+    @Query("""
+            select r from Reserva r
+              join fetch r.servicio join fetch r.recurso join fetch r.cliente
+            where r.negocio.id = :negocioId and r.inicio < :hasta and r.fin > :desde
+            order by r.inicio
+            """)
+    List<Reserva> findAgenda(UUID negocioId, Instant desde, Instant hasta);
+
+    /** Igual que {@link #findAgenda}, pero solo de un recurso (la agenda de un empleado). */
+    @Query("""
+            select r from Reserva r
+              join fetch r.servicio join fetch r.recurso join fetch r.cliente
+            where r.negocio.id = :negocioId and r.recurso.id = :recursoId
+              and r.inicio < :hasta and r.fin > :desde
+            order by r.inicio
+            """)
+    List<Reserva> findAgendaDeRecurso(UUID negocioId, UUID recursoId, Instant desde, Instant hasta);
+
+    Optional<Reserva> findByIdAndNegocioId(UUID id, UUID negocioId);
+
     /**
      * Reservas que ocupan tiempo de estos recursos dentro de [desde, hasta): las que están en
      * uno de los estados dados y cuyo intervalo [inicio, finBloqueo) se cruza con el pedido.

@@ -1,6 +1,7 @@
 package com.juan.reservas.auth;
 
 import java.time.Instant;
+import java.util.UUID;
 
 import com.juan.reservas.comun.EntidadBase;
 import com.juan.reservas.negocio.Negocio;
@@ -45,6 +46,13 @@ public class Usuario extends EntidadBase {
     @Column(name = "creado_en", nullable = false, updatable = false)
     private Instant creadoEn;
 
+    /**
+     * Recurso con el que trabaja un empleado: su agenda. Null para el propietario.
+     * Se guarda solo el id para que el módulo de autenticación no dependa del de recursos.
+     */
+    @Column(name = "recurso_id")
+    private UUID recursoId;
+
     /** Requerido por JPA. */
     protected Usuario() {
     }
@@ -56,6 +64,10 @@ public class Usuario extends EntidadBase {
         this.nombre = nombre;
         this.rol = rol;
         this.creadoEn = creadoEn;
+    }
+
+    public void asignarRecurso(UUID recursoId) {
+        this.recursoId = recursoId;
     }
 
     /** Un usuario desactivado no puede iniciar sesión ni renovarla. */
@@ -89,5 +101,9 @@ public class Usuario extends EntidadBase {
 
     public Instant getCreadoEn() {
         return creadoEn;
+    }
+
+    public UUID getRecursoId() {
+        return recursoId;
     }
 }
