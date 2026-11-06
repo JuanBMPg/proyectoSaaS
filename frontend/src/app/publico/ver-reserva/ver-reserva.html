@@ -17,7 +17,12 @@
   @case ('listo') {
     @if (reserva(); as reserva) {
       <main class="pagina">
-        <p class="estado" [class.pendiente]="reserva.estado === 'PENDIENTE'" role="status">
+        <p
+          class="estado"
+          [class.pendiente]="reserva.estado === 'PENDIENTE'"
+          [class.cancelada]="reserva.estado === 'CANCELADA'"
+          role="status"
+        >
           {{ textoEstado() }}
         </p>
 
@@ -57,8 +62,59 @@
           </div>
         </dl>
 
+        @if (recienCancelada()) {
+          <p class="aviso-cancelada">
+            Tu cita se ha cancelado y la hora queda libre para otra persona. Te hemos enviado un
+            email de confirmación.
+          </p>
+        } @else if (reserva.cancelable) {
+          <section class="cancelacion" aria-label="Cancelar la cita">
+            @if (confirmandoCancelacion()) {
+              <p class="pregunta">¿Seguro que quieres cancelar la cita? No se puede deshacer.</p>
+              @if (errorCancelacion(); as mensaje) {
+                <p class="error" role="alert">{{ mensaje }}</p>
+              }
+              <div class="botones">
+                <button
+                  mat-flat-button
+                  type="button"
+                  class="peligro"
+                  [disabled]="cancelando()"
+                  (click)="cancelar()"
+                >
+                  Sí, cancelar la cita
+                </button>
+                <button
+                  mat-button
+                  type="button"
+                  [disabled]="cancelando()"
+                  (click)="confirmandoCancelacion.set(false)"
+                >
+                  No, mantenerla
+                </button>
+              </div>
+            } @else {
+              <button mat-stroked-button type="button" (click)="confirmandoCancelacion.set(true)">
+                Cancelar la cita
+              </button>
+              @if (plazoCancelacion(); as plazo) {
+                <p class="aviso">Puedes cancelarla online hasta el {{ plazo }}.</p>
+              }
+            }
+          </section>
+        } @else if (plazoCancelacion(); as plazo) {
+          <p class="aviso">
+            El plazo para cancelar online terminó el {{ plazo }}.
+            @if (reserva.negocio.telefono) {
+              Si no puedes ir, llama a {{ reserva.negocio.nombre }} al
+              {{ reserva.negocio.telefono }}.
+            }
+          </p>
+        }
+
         <p class="aviso">
-          Te hemos enviado estos datos por email. Con el enlace del email puedes consultar tu cita en cualquier momento.
+          Te hemos enviado estos datos por email. Con el enlace del email puedes consultar o
+          cancelar tu cita en cualquier momento.
         </p>
 
         <a mat-stroked-button [routerLink]="['/', reserva.negocio.slug]">Reservar otra cita</a>

@@ -50,4 +50,12 @@ export class PublicoApiService {
   reserva(token: string): Observable<ReservaPublica> {
     return this.http.get<ReservaPublica>(`/api/publico/reservas/${encodeURIComponent(token)}`);
   }
+
+  /** 422 si ya no está activa o ha pasado el plazo de cancelación del negocio. */
+  cancelarReserva(token: string): Observable<ReservaPublica> {
+    return this.http.post<ReservaPublica>(
+      `/api/publico/reservas/${encodeURIComponent(token)}/cancelar`,
+      null,
+    );
+  }
 }

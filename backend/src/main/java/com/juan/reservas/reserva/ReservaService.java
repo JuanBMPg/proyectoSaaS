@@ -100,7 +100,7 @@ public class ReservaService {
         EstadoReserva estado = negocio.isConfirmacionAutomatica() ? EstadoReserva.CONFIRMADA : EstadoReserva.PENDIENTE;
         var datos = new DatosCliente(peticion.nombre(), peticion.email(), peticion.telefono(), peticion.notas());
         ReservaRegistrada registrada = registrar(negocio, servicio, recurso, peticion.inicio(), datos, estado, ahora);
-        return new ReservaCreadaDto(registrada.token(), aDto(registrada.reserva()));
+        return new ReservaCreadaDto(registrada.token(), aDto(registrada.reserva(), ahora));
     }
 
     /** Datos del cliente tal como llegan en la petición (sin normalizar). */
@@ -142,8 +142,40 @@ public class ReservaService {
     @Transactional(readOnly = true)
     public ReservaPublicaDto buscarPorToken(String token) {
         return repository.findByTokenHash(TokenSecreto.hash(token))
-                .map(ReservaService::aDto)
+                .map(reserva -> aDto(reserva, Instant.now(clock)))
                 .orElseThrow(() -> new NoEncontradoException("Esta reserva no existe"));
+    }
+
+    /**
+     * El cliente cancela desde su enlace, sin cuenta. Solo una reserva activa y dentro del plazo
+     * del negocio (por defecto, hasta 24 h antes); si no, 422 con un mensaje que explica qué hacer.
+     */
+    @Transactional
+    public ReservaPublicaDto cancelarPorToken(String token) {
+        Reserva reserva = repository.findParaCambiarPorTokenHash(TokenSecreto.hash(token))
+                .orElseThrow(() -> new NoEncontradoException("Esta reserva no existe"));
+        Instant ahora = Instant.now(clock);
+
+        if (!EstadoReserva.ACTIVOS.contains(reserva.getEstado())) {
+            throw new ReglaNegocioException("Esta reserva ya no se puede cancelar: está "
+                    + reserva.getEstado().name().toLowerCase(Locale.ROOT).replace('_', ' '));
+        }
+        if (ahora.isAfter(cancelableHasta(reserva))) {
+            Negocio negocio = reserva.getNegocio();
+            String llamar = negocio.getTelefono() == null ? ""
+                    : " Si no puedes ir, llama a " + negocio.getNombre() + " al " + negocio.getTelefono() + ".";
+            throw new ReglaNegocioException("Las citas se pueden cancelar online hasta "
+                    + describir(Duration.ofHours(negocio.getPlazoCancelacionHoras())) + " antes." + llamar);
+        }
+
+        reserva.cambiarEstado(EstadoReserva.CANCELADA);
+        eventos.publishEvent(new ReservaCancelada(reserva.getId(), true));
+        return aDto(reserva, ahora);
+    }
+
+    /** Último instante en que el cliente puede cancelar online. */
+    private static Instant cancelableHasta(Reserva reserva) {
+        return reserva.getInicio().minus(Duration.ofHours(reserva.getNegocio().getPlazoCancelacionHoras()));
     }
 
     private static void comprobarAntelacion(Instant inicio, Instant ahora, ZoneId zona, Negocio negocio) {
@@ -185,14 +217,18 @@ public class ReservaService {
         return texto == null || texto.isBlank() ? null : texto.trim();
     }
 
-    private static ReservaPublicaDto aDto(Reserva reserva) {
+    private static ReservaPublicaDto aDto(Reserva reserva, Instant ahora) {
         Negocio negocio = reserva.getNegocio();
         Servicio servicio = reserva.getServicio();
+        boolean activa = EstadoReserva.ACTIVOS.contains(reserva.getEstado());
+        Instant limite = activa ? cancelableHasta(reserva) : null;
         return new ReservaPublicaDto(
                 reserva.getEstado(),
                 reserva.getInicio(),
                 reserva.getFin(),
                 reserva.getCliente().getNombre(),
+                activa && !ahora.isAfter(limite),
+                limite,
                 new ReservaPublicaDto.Servicio(servicio.getNombre(), servicio.getDuracionMin(),
                         servicio.getPrecioCentimos()),
                 new ReservaPublicaDto.Recurso(reserva.getRecurso().getNombre(), negocio.getEtiquetaRecurso()),

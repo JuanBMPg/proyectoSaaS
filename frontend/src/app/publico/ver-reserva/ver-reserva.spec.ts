@@ -16,6 +16,9 @@ const RESERVA: ReservaPublica = {
   inicio: '2026-06-02T08:15:00Z',
   fin: '2026-06-02T08:45:00Z',
   clienteNombre: 'Juan',
+  cancelable: true,
+  // 24 h antes: lunes 1 de junio a las 10:15 en Madrid
+  cancelableHasta: '2026-06-01T08:15:00Z',
   servicio: { nombre: 'Corte de pelo', duracionMin: 30, precioCentimos: 1500 },
   recurso: { nombre: 'Marta', etiqueta: 'Profesional' },
   negocio: {
@@ -82,6 +85,62 @@ describe('VerReserva', () => {
     await responder(RESERVA);
 
     expect(elemento.querySelector('a')?.getAttribute('href')).toBe('/peluqueria-lola');
+  });
+
+  function boton(texto: string): HTMLButtonElement | undefined {
+    return [...elemento.querySelectorAll<HTMLButtonElement>('button')].find((b) =>
+      b.textContent?.includes(texto),
+    );
+  }
+
+  it('se puede cancelar tras confirmarlo, y la cita pasa a cancelada', async () => {
+    await responder(RESERVA);
+    expect(elemento.textContent).toContain('hasta el lunes, 1 de junio a las 10:15');
+
+    boton('Cancelar la cita')!.click();
+    await fixture.whenStable();
+    expect(elemento.textContent).toContain('¿Seguro que quieres cancelar la cita?');
+
+    boton('Sí, cancelar la cita')!.click();
+    const peticion = http.expectOne('/api/publico/reservas/token-secreto/cancelar');
+    expect(peticion.request.method).toBe('POST');
+    peticion.flush({ ...RESERVA, estado: 'CANCELADA', cancelable: false, cancelableHasta: null });
+    await fixture.whenStable();
+
+    expect(elemento.querySelector('[role=status]')?.textContent).toContain('Cita cancelada');
+    expect(elemento.textContent).toContain('Tu cita se ha cancelado');
+    expect(boton('Cancelar la cita')).toBeUndefined();
+  });
+
+  it('si el servidor rechaza la cancelación muestra su mensaje', async () => {
+    await responder(RESERVA);
+    boton('Cancelar la cita')!.click();
+    await fixture.whenStable();
+
+    boton('Sí, cancelar la cita')!.click();
+    http
+      .expectOne('/api/publico/reservas/token-secreto/cancelar')
+      .flush(
+        { detail: 'Las citas se pueden cancelar online hasta 24 horas antes.' },
+        { status: 422, statusText: 'Unprocessable Content' },
+      );
+    await fixture.whenStable();
+
+    expect(elemento.querySelector('[role=alert]')?.textContent).toContain('hasta 24 horas antes');
+  });
+
+  it('fuera de plazo no ofrece cancelar y explica a quién llamar', async () => {
+    await responder({
+      ...RESERVA,
+      cancelable: false,
+      negocio: { ...RESERVA.negocio, telefono: '600123123' },
+    });
+
+    expect(boton('Cancelar la cita')).toBeUndefined();
+    expect(elemento.textContent).toContain(
+      'El plazo para cancelar online terminó el lunes, 1 de junio',
+    );
+    expect(elemento.textContent).toContain('llama a Peluquería Lola al 600123123');
   });
 
   it('un enlace que no corresponde a ninguna reserva lo dice claramente', async () => {

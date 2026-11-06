@@ -27,8 +27,9 @@
 
         <p th:if="${enlace}" style="margin:24px 0 0;">
           <a th:href="${enlace}" href="#"
-             style="display:inline-block; background:#23695a; color:#ffffff; text-decoration:none; padding:11px 20px; border-radius:6px; font-weight:bold;">
-            Ver mi reserva
+             style="display:inline-block; background:#23695a; color:#ffffff; text-decoration:none; padding:11px 20px; border-radius:6px; font-weight:bold;"
+             th:text="${textoEnlace}">
+            Ver tu reserva
           </a>
         </p>
 

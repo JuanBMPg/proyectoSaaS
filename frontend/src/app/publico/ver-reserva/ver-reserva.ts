@@ -30,8 +30,8 @@ const TEXTO_ESTADO: Record<EstadoReserva, string> = {
 
 /**
  * Una reserva vista desde su enlace secreto (/reserva/:token). Es la página a la que se llega
- * al confirmar y la que enlazará el email de confirmación. El token de la URL es la llave:
- * no hace falta cuenta.
+ * al confirmar y la que enlaza el email de confirmación. El token de la URL es la llave:
+ * no hace falta cuenta para consultarla ni para cancelarla.
  */
 @Component({
   selector: 'app-ver-reserva',
@@ -51,6 +51,22 @@ export class VerReserva implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly centimosAEuros = centimosAEuros;
 
+  /** Paso intermedio antes de cancelar: cancelar no se puede deshacer. */
+  protected readonly confirmandoCancelacion = signal(false);
+  protected readonly cancelando = signal(false);
+  protected readonly errorCancelacion = signal<string | null>(null);
+  protected readonly recienCancelada = signal(false);
+
+  /** "lunes, 1 de junio a las 10:15": hasta cuándo se podía cancelar online. */
+  protected readonly plazoCancelacion = computed(() => {
+    const reserva = this.reserva();
+    if (!reserva?.cancelableHasta) {
+      return null;
+    }
+    const zona = reserva.negocio.zonaHoraria;
+    return `${fechaLargaEnZona(reserva.cancelableHasta, zona)} a las ${horaEnZona(reserva.cancelableHasta, zona)}`;
+  });
+
   /** Fecha y hora en la zona del negocio, que es donde hay que presentarse. */
   protected readonly cuando = computed(() => {
     const reserva = this.reserva();
@@ -69,6 +85,23 @@ export class VerReserva implements OnInit {
     const reserva = this.reserva();
     return reserva ? TEXTO_ESTADO[reserva.estado] : '';
   });
+
+  protected cancelar(): void {
+    this.cancelando.set(true);
+    this.errorCancelacion.set(null);
+    this.api.cancelarReserva(this.token()).subscribe({
+      next: (reserva) => {
+        this.reserva.set(reserva);
+        this.recienCancelada.set(true);
+        this.confirmandoCancelacion.set(false);
+        this.cancelando.set(false);
+      },
+      error: (error: unknown) => {
+        this.errorCancelacion.set(mensajeDeError(error));
+        this.cancelando.set(false);
+      },
+    });
+  }
 
   ngOnInit(): void {
     this.api.reserva(this.token()).subscribe({

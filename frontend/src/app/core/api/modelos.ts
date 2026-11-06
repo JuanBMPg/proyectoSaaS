@@ -157,6 +157,10 @@ export interface ReservaPublica {
   inicio: string;
   fin: string;
   clienteNombre: string;
+  /** Si el cliente puede cancelarla ahora (lo decide el servidor con su reloj). */
+  cancelable: boolean;
+  /** Último instante para cancelar online; null si ya no está activa. */
+  cancelableHasta: string | null;
   servicio: { nombre: string; duracionMin: number; precioCentimos: number };
   recurso: { nombre: string; etiqueta: string };
   negocio: {
