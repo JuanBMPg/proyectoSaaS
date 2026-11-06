@@ -34,6 +34,11 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+  # Detrás de un proxy HTTPS (el de la plataforma de hosting, a través de Nginx): Tomcat toma el
+  # esquema de X-Forwarded-Proto, pero solo si la petición viene de una IP interna (el proxy), así
+  # nadie de fuera puede falsearlo. Sin esto el backend se creería en http y vería un origen
+  # distinto en cada POST del navegador (403 de CORS).
+  forward-headers-strategy: native
 
 springdoc:
   swagger-ui:
