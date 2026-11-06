@@ -90,3 +90,51 @@ jobs:
 
       - name: Construir la imagen del frontend
         run: docker build -t reservas-frontend frontend
+
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Secretos de usar y tirar, generados en cada ejecución: no hay ninguno en el repositorio
+      - name: Generar secretos de prueba
+        run: |
+          echo "DB_PASSWORD=$(openssl rand -hex 16)" >> "$GITHUB_ENV"
+          echo "JWT_SECRET=$(openssl rand -base64 48)" >> "$GITHUB_ENV"
+
+      # La aplicación completa, igual que en local: PostgreSQL, Mailpit, backend y Nginx
+      - name: Levantar la aplicación con Docker Compose
+        run: docker compose up -d --build --wait --wait-timeout 300
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Instalar Playwright
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Comprobar tipos
+        working-directory: e2e
+        run: npm run lint
+
+      - name: Tests e2e
+        working-directory: e2e
+        run: npm test
+
+      - name: Logs del backend si algo falla
+        if: failure()
+        run: docker compose logs backend
+
+      - name: Subir el informe de Playwright
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: informe-playwright
+          path: e2e/playwright-report/
+          if-no-files-found: ignore
