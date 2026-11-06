@@ -34,6 +34,23 @@ public interface ReservaRepository extends JpaRepository<Reserva, UUID> {
 
     Optional<Reserva> findByIdAndNegocioId(UUID id, UUID negocioId);
 
+    /** Cuántas reservas del negocio en esos estados empiezan dentro de [desde, hasta). */
+    @Query("""
+            select count(r) from Reserva r
+            where r.negocio.id = :negocioId and r.estado in :estados
+              and r.inicio >= :desde and r.inicio < :hasta
+            """)
+    long contarEnRango(UUID negocioId, Collection<EstadoReserva> estados, Instant desde, Instant hasta);
+
+    /** Igual que {@link #contarEnRango}, pero solo de un recurso. */
+    @Query("""
+            select count(r) from Reserva r
+            where r.negocio.id = :negocioId and r.recurso.id = :recursoId and r.estado in :estados
+              and r.inicio >= :desde and r.inicio < :hasta
+            """)
+    long contarEnRangoDeRecurso(UUID negocioId, UUID recursoId, Collection<EstadoReserva> estados,
+            Instant desde, Instant hasta);
+
     /**
      * Reservas que ocupan tiempo de estos recursos dentro de [desde, hasta): las que están en
      * uno de los estados dados y cuyo intervalo [inicio, finBloqueo) se cruza con el pedido.
