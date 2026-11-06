@@ -39,7 +39,8 @@ Es un proyecto personal de portfolio y está en desarrollo.
 │       ├── auth/            # Registro, login, JWT y refresh tokens
 │       ├── negocio/ servicio/ recurso/ empleado/ cliente/
 │       ├── reserva/         # Reservas: web pública, agenda del panel y estados
-│       ├── disponibilidad/  # CalculadoraDisponibilidad (lógica pura) y su carga de datos
+│       ├── disponibilidad/  # CalculadoraDisponibilidad y HorarioDelDia (lógica pura) y su carga de datos
+│       ├── excepcion/       # Vacaciones, festivos y horarios especiales
 │       ├── publico/         # Endpoints de la página pública
 │       ├── notificacion/    # Email de confirmación (plantillas Thymeleaf)
 │       ├── demo/            # Negocio de demostración (opcional, DEMO=true)
@@ -166,6 +167,10 @@ Después vienen la fase 3 (pagos, estadísticas, plantillas de sector) y la fase
 - **Disponibilidad como lógica pura.** `CalculadoraDisponibilidad` recibe horarios, reservas y reglas ya cargados
   y devuelve los huecos en UTC, sin base de datos ni reloj. Tiene tests de los dos cambios de hora del año
   (días de 23 y 25 horas) y un test de propiedades con datos aleatorios.
+- **Excepciones sin tocar la calculadora.** Una excepción cubre unos días (fechas locales del negocio) y es
+  un cierre o un horario especial, de un recurso o de todo el negocio. `HorarioDelDia` resuelve las franjas
+  de cada recurso antes de calcular (cerrar gana a abrir y lo del recurso gana a lo del negocio), así que
+  la calculadora sigue recibiendo franjas, como antes.
 - **Tiempo testeable.** Se inyecta un `java.time.Clock` en lugar de llamar a `Instant.now()`.
 - **Sesión segura.** El access token (JWT de 15 min) vive solo en memoria en el frontend; el refresh token
   (7 días, rotado en cada uso y guardado como hash) viaja en una cookie `HttpOnly; SameSite=Strict`.

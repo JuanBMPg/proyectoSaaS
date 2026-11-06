@@ -7,9 +7,9 @@ import java.util.UUID;
 /**
  * Lo que la calculadora necesita saber de un recurso para un día concreto.
  *
- * @param franjas  su horario de ESE día de la semana, en hora local
+ * @param franjas  su horario de ESE día en hora local, ya con las excepciones aplicadas
  * @param ocupados intervalos que ya no se pueden usar: reservas pendientes o confirmadas
- *                 como [inicio, fin_bloqueo) y, en la fase 2, las excepciones del horario
+ *                 como [inicio, fin_bloqueo)
  */
 public record AgendaRecurso(UUID recursoId, List<FranjaLocal> franjas, List<Intervalo> ocupados) {
 
