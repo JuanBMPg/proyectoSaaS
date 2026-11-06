@@ -108,17 +108,39 @@ public class ReservaPanelService {
     }
 
     /**
+     * Solicitudes que esperan confirmación (negocios con confirmación manual), de la más
+     * próxima a la más lejana. Las ya pasadas no se muestran: no tiene sentido confirmarlas.
+     */
+    @Transactional(readOnly = true)
+    public List<ReservaPanelDto> pendientes(UsuarioActual usuario) {
+        Instant ahora = Instant.now(clock);
+        if (usuario.esPropietario()) {
+            return repository.findPendientes(usuario.negocioId(), ahora).stream()
+                    .map(ReservaPanelService::aDto).toList();
+        }
+        UUID recursoId = recursoDelEmpleado(usuario);
+        if (recursoId == null) {
+            return List.of();
+        }
+        return repository.findPendientesDeRecurso(usuario.negocioId(), recursoId, ahora).stream()
+                .map(ReservaPanelService::aDto).toList();
+    }
+
+    /**
      * Confirmar, cancelar, completar o marcar no presentado (422 si el cambio no está permitido).
-     * Si el negocio cancela una reserva, el cliente recibe un email.
+     * El cliente recibe un email si el negocio confirma su solicitud o cancela su reserva.
      */
     @Transactional
     public ReservaPanelDto cambiarEstado(UsuarioActual usuario, UUID reservaId, EstadoReserva nuevo) {
         Reserva reserva = repository.findParaCambiar(reservaId, usuario.negocioId())
                 .filter(r -> usuario.esPropietario() || r.getRecurso().getId().equals(recursoDelEmpleado(usuario)))
                 .orElseThrow(() -> new NoEncontradoException("Reserva no encontrada"));
+        EstadoReserva anterior = reserva.getEstado();
         reserva.cambiarEstado(nuevo);
         if (nuevo == EstadoReserva.CANCELADA) {
-            eventos.publishEvent(new ReservaCancelada(reserva.getId(), false));
+            eventos.publishEvent(new ReservaCancelada(reserva.getId(), false, anterior == EstadoReserva.PENDIENTE));
+        } else if (nuevo == EstadoReserva.CONFIRMADA) {
+            eventos.publishEvent(new ReservaConfirmada(reserva.getId()));
         }
         return aDto(reserva);
     }

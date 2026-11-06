@@ -49,6 +49,26 @@ public interface ReservaRepository extends JpaRepository<Reserva, UUID> {
             """)
     List<Reserva> findAgendaDeRecurso(UUID negocioId, UUID recursoId, Instant desde, Instant hasta);
 
+    /** Reservas pendientes de confirmar que aún no han empezado, de la más próxima a la más lejana. */
+    @Query("""
+            select r from Reserva r
+              join fetch r.servicio join fetch r.recurso join fetch r.cliente
+            where r.negocio.id = :negocioId and r.estado = com.juan.reservas.reserva.EstadoReserva.PENDIENTE
+              and r.inicio > :ahora
+            order by r.inicio
+            """)
+    List<Reserva> findPendientes(UUID negocioId, Instant ahora);
+
+    /** Igual que {@link #findPendientes}, pero solo de un recurso (las de un empleado). */
+    @Query("""
+            select r from Reserva r
+              join fetch r.servicio join fetch r.recurso join fetch r.cliente
+            where r.negocio.id = :negocioId and r.recurso.id = :recursoId
+              and r.estado = com.juan.reservas.reserva.EstadoReserva.PENDIENTE and r.inicio > :ahora
+            order by r.inicio
+            """)
+    List<Reserva> findPendientesDeRecurso(UUID negocioId, UUID recursoId, Instant ahora);
+
     /** Cuántas reservas del negocio en esos estados empiezan dentro de [desde, hasta). */
     @Query("""
             select count(r) from Reserva r

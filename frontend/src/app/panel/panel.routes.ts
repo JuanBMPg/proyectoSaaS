@@ -39,6 +39,12 @@ export const panelRoutes: Routes = [
     loadComponent: () => import('./excepciones/excepciones').then((m) => m.Excepciones),
   },
   {
+    path: 'ajustes',
+    title: 'Ajustes · Reservas',
+    canActivate: [propietarioGuard],
+    loadComponent: () => import('./ajustes/ajustes').then((m) => m.Ajustes),
+  },
+  {
     path: 'recursos/:id/horario',
     title: 'Horario · Reservas',
     canActivate: [propietarioGuard],

@@ -84,8 +84,8 @@ class RedactorEmailReservaTest {
 
     @Test
     void laCancelacionDistingueQuienCancelaYEnlazaALaPaginaDelNegocio() {
-        EmailReserva delCliente = redactor.cancelacion(reserva("Juan", EstadoReserva.CANCELADA), true);
-        EmailReserva delNegocio = redactor.cancelacion(reserva("Juan", EstadoReserva.CANCELADA), false);
+        EmailReserva delCliente = redactor.cancelacion(reserva("Juan", EstadoReserva.CANCELADA), true, false);
+        EmailReserva delNegocio = redactor.cancelacion(reserva("Juan", EstadoReserva.CANCELADA), false, false);
 
         assertThat(delCliente.asunto()).isEqualTo("Cita cancelada: Peluquería Lola, lunes 9 de noviembre, 10:00");
         assertThat(delCliente.texto())
@@ -93,6 +93,27 @@ class RedactorEmailReservaTest {
                 .contains("Reservar otra cita: https://reservas.example.com/peluqueria-lola");
         assertThat(delNegocio.texto()).contains("Peluquería Lola ha cancelado tu cita.");
         assertThat(delNegocio.html()).contains("href=\"https://reservas.example.com/peluqueria-lola\"");
+    }
+
+    @Test
+    void siElNegocioRechazaUnaSolicitudElEmailOfreceElegirOtraHora() {
+        EmailReserva email = redactor.cancelacion(reserva("Juan", EstadoReserva.CANCELADA), false, true);
+
+        assertThat(email.asunto()).startsWith("Solicitud no aceptada: Peluquería Lola");
+        assertThat(email.texto())
+                .contains("Peluquería Lola no puede atenderte a esa hora.")
+                .contains("Elegir otra hora: https://reservas.example.com/peluqueria-lola");
+    }
+
+    @Test
+    void laConfirmacionDelNegocioNoLlevaEnlaceYRemiteAlPrimerEmail() {
+        EmailReserva email = redactor.confirmadaPorNegocio(reserva("Juan", EstadoReserva.CONFIRMADA));
+
+        assertThat(email.asunto()).isEqualTo("Cita confirmada: Peluquería Lola, lunes 9 de noviembre, 10:00");
+        assertThat(email.texto())
+                .contains("Peluquería Lola ha confirmado tu cita.")
+                .contains("Con el enlace del primer email")
+                .doesNotContain("https://");
     }
 
     private static Reserva reserva(String nombreCliente, EstadoReserva estado) {

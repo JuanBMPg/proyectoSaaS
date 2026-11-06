@@ -71,15 +71,33 @@ public class RedactorEmailReserva {
     /**
      * Aviso de cancelación, con un enlace a la página del negocio para reservar otra hora.
      *
-     * @param porCliente true si la canceló el propio cliente desde su enlace
+     * @param porCliente   true si la canceló el propio cliente desde su enlace
+     * @param eraSolicitud true si estaba pendiente: si la cancela el negocio, la ha rechazado
      */
-    public EmailReserva cancelacion(Reserva reserva, boolean porCliente) {
+    public EmailReserva cancelacion(Reserva reserva, boolean porCliente, boolean eraSolicitud) {
         Negocio negocio = reserva.getNegocio();
+        String enlace = frontend() + "/" + negocio.getSlug();
+        if (!porCliente && eraSolicitud) {
+            return redactar(reserva, "Solicitud no aceptada: " + negocio.getNombre() + ", " + cuando(reserva),
+                    negocio.getNombre() + " no puede atenderte a esa hora. Puedes elegir otra en su página.",
+                    enlace, "Elegir otra hora", null);
+        }
         String mensaje = porCliente
                 ? "Tu cita se ha cancelado. Gracias por avisar: así otra persona puede aprovechar la hora."
                 : negocio.getNombre() + " ha cancelado tu cita. Disculpa las molestias.";
         return redactar(reserva, "Cita cancelada: " + negocio.getNombre() + ", " + cuando(reserva), mensaje,
-                frontend() + "/" + negocio.getSlug(), "Reservar otra cita", null);
+                enlace, "Reservar otra cita", null);
+    }
+
+    /**
+     * El negocio ha confirmado una solicitud pendiente. Sin enlace: el token en claro solo
+     * existió al crear la reserva; el cliente lo tiene en el primer email.
+     */
+    public EmailReserva confirmadaPorNegocio(Reserva reserva) {
+        Negocio negocio = reserva.getNegocio();
+        return redactar(reserva, "Cita confirmada: " + negocio.getNombre() + ", " + cuando(reserva),
+                negocio.getNombre() + " ha confirmado tu cita. Te esperamos.", null, null,
+                "Con el enlace del primer email puedes consultarla o cancelarla.");
     }
 
     private EmailReserva redactar(Reserva reserva, String asunto, String mensaje, @Nullable String enlace,

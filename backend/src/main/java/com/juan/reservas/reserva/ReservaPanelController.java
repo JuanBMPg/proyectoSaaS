@@ -52,6 +52,12 @@ public class ReservaPanelController {
         return service.agenda(usuario, desde, hasta, recursoId);
     }
 
+    @Operation(summary = "Solicitudes pendientes de confirmar que aún no han empezado")
+    @GetMapping("/pendientes")
+    public List<ReservaPanelDto> pendientes(UsuarioActual usuario) {
+        return service.pendientes(usuario);
+    }
+
     @Operation(summary = "Reserva manual (p. ej. por teléfono): confirmada, sin reglas de antelación ni horario")
     @PostMapping
     public ResponseEntity<ReservaPanelDto> crear(UsuarioActual usuario,

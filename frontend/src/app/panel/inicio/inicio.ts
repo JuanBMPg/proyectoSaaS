@@ -5,11 +5,12 @@ import { RouterLink } from '@angular/router';
 import { Negocio } from '../../core/api/modelos';
 import { NegocioApiService } from '../../core/api/negocio-api.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { SolicitudesPendientes } from './solicitudes-pendientes';
 
-/** Página de inicio del panel. La agenda llegará en una tarea posterior de la fase 1. */
+/** Página de inicio del panel: accesos directos y las solicitudes que esperan confirmación. */
 @Component({
   selector: 'app-inicio',
-  imports: [MatButtonModule, RouterLink],
+  imports: [MatButtonModule, RouterLink, SolicitudesPendientes],
   templateUrl: './inicio.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -18,7 +19,7 @@ export class Inicio {
   protected readonly negocio = signal<Negocio | null>(null);
 
   constructor() {
-    // Los datos del negocio solo los puede ver el propietario (el backend responde 403 al empleado)
+    // El resumen del negocio es solo para el propietario; el empleado ve un acceso a su agenda
     if (this.rol() === 'PROPIETARIO') {
       inject(NegocioApiService)
         .obtener()

@@ -1,0 +1,44 @@
+.solicitudes {
+  margin-top: 32px;
+  max-width: 720px;
+}
+
+h2 {
+  margin: 0 0 12px;
+  font: var(--mat-sys-title-large);
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.solicitud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+}
+
+.datos {
+  display: flex;
+  flex-direction: column;
+}
+
+.cuando::first-letter {
+  text-transform: uppercase;
+}
+
+.botones {
+  display: flex;
+  gap: 8px;
+}

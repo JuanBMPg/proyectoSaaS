@@ -2,6 +2,8 @@ package com.juan.reservas.negocio;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -11,6 +13,7 @@ import com.juan.reservas.config.OpenApiConfig;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/panel/negocio")
@@ -33,5 +36,12 @@ public class NegocioController {
     @PreAuthorize("hasAnyRole('PROPIETARIO', 'EMPLEADO')")
     public NegocioDto obtener(UsuarioActual usuario) {
         return service.obtener(usuario.negocioId());
+    }
+
+    @Operation(summary = "Cambia los datos y las reglas de reserva del negocio (solo el propietario)")
+    @PutMapping
+    @PreAuthorize("hasRole('PROPIETARIO')")
+    public NegocioDto actualizar(UsuarioActual usuario, @Valid @RequestBody NegocioRequest peticion) {
+        return service.actualizar(usuario.negocioId(), peticion);
     }
 }
