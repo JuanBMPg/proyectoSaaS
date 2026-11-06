@@ -85,6 +85,9 @@ function etiquetaDia(dia: Date): string {
 
 /** Elige un día en un calendario de Material, pasando de mes si hace falta. */
 export async function elegirDia(page: Page, dia: Date): Promise<void> {
+  // Primero, que el calendario esté pintado: isVisible() no espera, y sin esto se pasaría de
+  // mes solo porque el calendario aún no ha aparecido
+  await page.locator('.mat-calendar-body-cell').first().waitFor();
   const celda = page.getByRole('button', { name: etiquetaDia(dia), exact: true });
   if (!(await celda.isVisible())) {
     await page.locator('.mat-calendar-next-button').click();
