@@ -26,7 +26,7 @@ Es un proyecto personal de portfolio y está en desarrollo.
 | API | REST con errores en formato Problem Details (RFC 9457) y Swagger UI (springdoc-openapi) |
 | Mapeo | MapStruct (las entidades JPA nunca salen del backend; la API usa DTOs `record`) |
 | Frontend | Angular 22 (componentes standalone y signals) + Angular Material |
-| Tests | JUnit, Mockito y Testcontainers en el backend; Vitest en el frontend |
+| Tests | JUnit, Mockito y Testcontainers en el backend; Vitest en el frontend; Playwright de extremo a extremo |
 | Infraestructura | Docker (imágenes multi-stage, Nginx), Docker Compose y GitHub Actions |
 
 ## Estructura
@@ -49,8 +49,9 @@ Es un proyecto personal de portfolio y está en desarrollo.
 ├── frontend/                # Angular: panel privado y página pública
 │   ├── Dockerfile           # Compila con Node y sirve con Nginx
 │   └── nginx.conf.template  # Sirve la SPA y hace de proxy de /api
+├── e2e/                     # Tests de extremo a extremo con Playwright
 ├── docker-compose.yml       # PostgreSQL, Mailpit, backend y frontend
-└── .github/workflows/       # CI: tests, lint, cobertura e imágenes Docker
+└── .github/workflows/       # CI: tests, lint, cobertura, imágenes Docker y e2e
 ```
 
 ## Arrancar en local
@@ -106,6 +107,15 @@ cd backend && ./mvnw verify                 # unitarios + integración (necesita
 cd frontend && npm run lint && npm test
 ```
 
+Los tests de extremo a extremo (Playwright) recorren la aplicación completa en un navegador: reservar,
+recibir el email, cancelar, crear un festivo en el panel y confirmar una solicitud. Cada test crea su propio
+negocio por la API, así que no dependen de la demo.
+
+```bash
+docker compose up -d --build                # la aplicación completa en http://localhost:8081
+cd e2e && npm ci && npx playwright install chromium && npm test
+```
+
 Los tests de integración levantan PostgreSQL y Mailpit reales con Testcontainers. Si no hay Docker
 disponible se marcan como omitidos; en el CI se exige que se ejecuten.
 
@@ -145,14 +155,14 @@ Las dos imágenes están listas para cualquier servicio que ejecute contenedores
 - [x] Empleados con acceso solo a su agenda
 - [x] Datos de demo e imágenes Docker listas para desplegar (falta publicar la demo en un hosting)
 
-**Fase 2: automatización** (en curso)
+**Fase 2: automatización** ✅
 - [x] Excepciones: vacaciones, festivos y horarios especiales
 - [x] Recordatorios automáticos 24 h antes con tarea programada (y emails con patrón outbox)
 - [x] Cancelación por enlace respetando el plazo
 - [x] Confirmación manual para negocios que la activen (y ajustes del negocio en el panel)
-- [ ] Tests e2e con Playwright del flujo de reserva
+- [x] Tests e2e con Playwright del flujo de reserva
 
-Después vienen la fase 3 (pagos, estadísticas, plantillas de sector) y la fase 4 (widget, iCal, lista de espera).
+Lo siguiente es la fase 3 (pagos, estadísticas, plantillas de sector) y después la fase 4 (widget, iCal, lista de espera).
 
 ## Decisiones técnicas
 
