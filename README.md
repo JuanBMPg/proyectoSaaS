@@ -148,7 +148,7 @@ Las dos imágenes están listas para cualquier servicio que ejecute contenedores
 **Fase 2: automatización** (en curso)
 - [x] Excepciones: vacaciones, festivos y horarios especiales
 - [x] Recordatorios automáticos 24 h antes con tarea programada (y emails con patrón outbox)
-- [ ] Cancelación por enlace respetando el plazo
+- [x] Cancelación por enlace respetando el plazo
 - [ ] Confirmación manual para negocios que la activen
 - [ ] Tests e2e con Playwright del flujo de reserva
 
@@ -182,5 +182,8 @@ Después vienen la fase 3 (pagos, estadísticas, plantillas de sector) y la fase
 - **Recordatorios 24 h antes.** Otra tarea programada encola el recordatorio de las citas confirmadas que
   empiezan en las próximas 24 horas (salvo las reservadas con menos antelación). Un índice único parcial
   garantiza un solo recordatorio por reserva.
+- **Cancelar sin cuenta.** El enlace secreto del email permite cancelar hasta el plazo del negocio (24 h por
+  defecto). El servidor decide si aún se puede, con su reloj, y bloquea la fila (`SELECT ... FOR UPDATE`) para
+  que un doble clic no cancele dos veces ni envíe dos emails.
 - **Configuración sin secretos.** Todo llega por variables de entorno; `.env` está en `.gitignore`
   y `.env.example` documenta las variables.

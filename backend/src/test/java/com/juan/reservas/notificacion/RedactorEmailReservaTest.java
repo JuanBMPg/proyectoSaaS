@@ -79,7 +79,20 @@ class RedactorEmailReservaTest {
                 .contains("Lunes 9 de noviembre · 10:00 – 10:30")
                 .contains("cancélala desde el enlace del email de confirmación")
                 .doesNotContain("Ver tu reserva");
-        assertThat(email.html()).doesNotContain("Ver mi reserva");
+        assertThat(email.html()).doesNotContain("Ver tu reserva");
+    }
+
+    @Test
+    void laCancelacionDistingueQuienCancelaYEnlazaALaPaginaDelNegocio() {
+        EmailReserva delCliente = redactor.cancelacion(reserva("Juan", EstadoReserva.CANCELADA), true);
+        EmailReserva delNegocio = redactor.cancelacion(reserva("Juan", EstadoReserva.CANCELADA), false);
+
+        assertThat(delCliente.asunto()).isEqualTo("Cita cancelada: Peluquería Lola, lunes 9 de noviembre, 10:00");
+        assertThat(delCliente.texto())
+                .contains("Tu cita se ha cancelado. Gracias por avisar")
+                .contains("Reservar otra cita: https://reservas.example.com/peluqueria-lola");
+        assertThat(delNegocio.texto()).contains("Peluquería Lola ha cancelado tu cita.");
+        assertThat(delNegocio.html()).contains("href=\"https://reservas.example.com/peluqueria-lola\"");
     }
 
     private static Reserva reserva(String nombreCliente, EstadoReserva estado) {

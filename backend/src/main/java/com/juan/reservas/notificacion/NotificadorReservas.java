@@ -40,6 +40,10 @@ public class NotificadorReservas {
         encolar(reserva, TipoEmail.RECORDATORIO, redactor.recordatorio(reserva));
     }
 
+    public void cancelacion(Reserva reserva, boolean porCliente) {
+        encolar(reserva, TipoEmail.RESERVA_CANCELADA, redactor.cancelacion(reserva, porCliente));
+    }
+
     private void encolar(Reserva reserva, TipoEmail tipo, EmailReserva email) {
         Negocio negocio = reserva.getNegocio();
         cola.save(new EmailPendiente(negocio.getId(), reserva.getId(), tipo, negocio.getNombre(),

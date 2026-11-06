@@ -7,11 +7,28 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+
+import jakarta.persistence.LockModeType;
 
 public interface ReservaRepository extends JpaRepository<Reserva, UUID> {
 
     Optional<Reserva> findByTokenHash(String tokenHash);
+
+    /**
+     * Para cambiar su estado: SELECT ... FOR UPDATE. Si llegan dos peticiones a la vez (un doble
+     * clic en "Cancelar"), la segunda espera a que acabe la primera y ya ve la reserva cancelada,
+     * así que no se envían dos emails ni se pisa el cambio.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from Reserva r where r.tokenHash = :tokenHash")
+    Optional<Reserva> findParaCambiarPorTokenHash(String tokenHash);
+
+    /** Igual que {@link #findParaCambiarPorTokenHash}, para el panel. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from Reserva r where r.id = :id and r.negocio.id = :negocioId")
+    Optional<Reserva> findParaCambiar(UUID id, UUID negocioId);
 
     /** Reservas de la agenda del negocio que se cruzan con [desde, hasta), con sus datos en una consulta. */
     @Query("""
@@ -31,8 +48,6 @@ public interface ReservaRepository extends JpaRepository<Reserva, UUID> {
             order by r.inicio
             """)
     List<Reserva> findAgendaDeRecurso(UUID negocioId, UUID recursoId, Instant desde, Instant hasta);
-
-    Optional<Reserva> findByIdAndNegocioId(UUID id, UUID negocioId);
 
     /** Cuántas reservas del negocio en esos estados empiezan dentro de [desde, hasta). */
     @Query("""

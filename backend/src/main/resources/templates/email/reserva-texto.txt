@@ -7,7 +7,7 @@ Hola, [(${cliente})]:
 Con [(${recurso})] · [(${precio})]
 [(${negocio})][# th:if="${direccion}"] · [(${direccion})][/]
 [# th:if="${enlace}"]
-Ver tu reserva: [(${enlace})]
+[(${textoEnlace})]: [(${enlace})]
 [/][# th:if="${pie}"]
 [(${pie})][/][# th:if="${telefono}"]
 Si necesitas algo, llama a [(${negocio})] al [(${telefono})].[/]

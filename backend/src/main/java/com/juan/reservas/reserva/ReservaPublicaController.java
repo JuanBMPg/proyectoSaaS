@@ -41,4 +41,10 @@ public class ReservaPublicaController {
     public ReservaPublicaDto ver(@PathVariable String token) {
         return service.buscarPorToken(token);
     }
+
+    @Operation(summary = "El cliente cancela su reserva (422 si ya no está activa o ha pasado el plazo del negocio)")
+    @PostMapping("/api/publico/reservas/{token}/cancelar")
+    public ReservaPublicaDto cancelar(@PathVariable String token) {
+        return service.cancelarPorToken(token);
+    }
 }

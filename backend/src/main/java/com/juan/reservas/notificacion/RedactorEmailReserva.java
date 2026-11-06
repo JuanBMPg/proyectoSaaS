@@ -51,7 +51,8 @@ public class RedactorEmailReserva {
                 ? "Tu cita está confirmada."
                 : "Hemos recibido tu solicitud. " + negocio.getNombre() + " la confirmará y te avisaremos.";
         return redactar(reserva, "Tu cita en " + negocio.getNombre() + ": " + cuando(reserva), mensaje,
-                enlace(token), "Guarda este email: el enlace es la forma de consultar tu cita.");
+                enlaceReserva(token), "Ver tu reserva",
+                "Guarda este email: con el enlace puedes consultar o cancelar tu cita.");
     }
 
     /**
@@ -62,13 +63,27 @@ public class RedactorEmailReserva {
     public EmailReserva recordatorio(Reserva reserva) {
         Negocio negocio = reserva.getNegocio();
         return redactar(reserva, "Recordatorio: tu cita en " + negocio.getNombre() + " " + cuando(reserva),
-                "Te recordamos tu cita.", null,
+                "Te recordamos tu cita.", null, null,
                 "Si no puedes venir, cancélala desde el enlace del email de confirmación para que otra persona "
                         + "pueda aprovechar la hora.");
     }
 
+    /**
+     * Aviso de cancelación, con un enlace a la página del negocio para reservar otra hora.
+     *
+     * @param porCliente true si la canceló el propio cliente desde su enlace
+     */
+    public EmailReserva cancelacion(Reserva reserva, boolean porCliente) {
+        Negocio negocio = reserva.getNegocio();
+        String mensaje = porCliente
+                ? "Tu cita se ha cancelado. Gracias por avisar: así otra persona puede aprovechar la hora."
+                : negocio.getNombre() + " ha cancelado tu cita. Disculpa las molestias.";
+        return redactar(reserva, "Cita cancelada: " + negocio.getNombre() + ", " + cuando(reserva), mensaje,
+                frontend() + "/" + negocio.getSlug(), "Reservar otra cita", null);
+    }
+
     private EmailReserva redactar(Reserva reserva, String asunto, String mensaje, @Nullable String enlace,
-            @Nullable String pie) {
+            @Nullable String textoEnlace, @Nullable String pie) {
         Negocio negocio = reserva.getNegocio();
         // Las horas, en la zona del negocio: es donde el cliente tiene que presentarse
         ZoneId zona = ZoneId.of(negocio.getZonaHoraria());
@@ -88,6 +103,7 @@ public class RedactorEmailReserva {
         datos.setVariable("direccion", negocio.getDireccion());
         datos.setVariable("telefono", negocio.getTelefono());
         datos.setVariable("enlace", enlace);
+        datos.setVariable("textoEnlace", textoEnlace);
         datos.setVariable("pie", pie);
 
         return new EmailReserva(reserva.getCliente().getEmail(), asunto,
@@ -101,8 +117,13 @@ public class RedactorEmailReserva {
         return DIA.format(inicio) + ", " + HORA.format(inicio);
     }
 
-    private String enlace(String token) {
-        return props.frontendUrl().replaceAll("/+$", "") + "/reserva/" + token;
+    private String enlaceReserva(String token) {
+        return frontend() + "/reserva/" + token;
+    }
+
+    /** Dirección de la web sin la barra final, para no generar "//" en los enlaces. */
+    private String frontend() {
+        return props.frontendUrl().replaceAll("/+$", "");
     }
 
     private static String euros(int centimos) {
