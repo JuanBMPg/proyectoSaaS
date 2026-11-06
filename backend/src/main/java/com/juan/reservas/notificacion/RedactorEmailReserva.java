@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Currency;
 import java.util.Locale;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.TemplateEngine;
@@ -18,8 +19,11 @@ import com.juan.reservas.reserva.EstadoReserva;
 import com.juan.reservas.reserva.Reserva;
 
 /**
- * Redacta el email de confirmación de una reserva. No envía nada: así se puede probar el
- * contenido con un test unitario, sin servidor de correo.
+ * Redacta los emails de una reserva. No envía nada: así se puede probar el contenido con un
+ * test unitario, sin servidor de correo.
+ * <p>
+ * Todos usan la misma plantilla (resources/templates/email/reserva): saludo, un mensaje,
+ * la ficha de la cita, el enlace a la reserva si se tiene y una nota final.
  */
 @Component
 public class RedactorEmailReserva {
@@ -36,20 +40,46 @@ public class RedactorEmailReserva {
         this.props = props;
     }
 
-    /** @param token token en claro del enlace; solo existe en memoria al crear la reserva */
+    /**
+     * Al reservar: confirmada o, si el negocio confirma a mano, solicitud recibida.
+     *
+     * @param token token en claro del enlace; solo existe en memoria al crear la reserva
+     */
     public EmailReserva confirmacion(Reserva reserva, String token) {
+        Negocio negocio = reserva.getNegocio();
+        String mensaje = reserva.getEstado() == EstadoReserva.CONFIRMADA
+                ? "Tu cita está confirmada."
+                : "Hemos recibido tu solicitud. " + negocio.getNombre() + " la confirmará y te avisaremos.";
+        return redactar(reserva, "Tu cita en " + negocio.getNombre() + ": " + cuando(reserva), mensaje,
+                enlace(token), "Guarda este email: el enlace es la forma de consultar tu cita.");
+    }
+
+    /**
+     * Recordatorio previo a la cita. No lleva el enlace: de la reserva solo se guarda el hash
+     * del token, así que el enlace en claro ya no existe. El cliente lo tiene en el email de
+     * confirmación.
+     */
+    public EmailReserva recordatorio(Reserva reserva) {
+        Negocio negocio = reserva.getNegocio();
+        return redactar(reserva, "Recordatorio: tu cita en " + negocio.getNombre() + " " + cuando(reserva),
+                "Te recordamos tu cita.", null,
+                "Si no puedes venir, cancélala desde el enlace del email de confirmación para que otra persona "
+                        + "pueda aprovechar la hora.");
+    }
+
+    private EmailReserva redactar(Reserva reserva, String asunto, String mensaje, @Nullable String enlace,
+            @Nullable String pie) {
         Negocio negocio = reserva.getNegocio();
         // Las horas, en la zona del negocio: es donde el cliente tiene que presentarse
         ZoneId zona = ZoneId.of(negocio.getZonaHoraria());
         ZonedDateTime inicio = reserva.getInicio().atZone(zona);
         ZonedDateTime fin = reserva.getFin().atZone(zona);
-        String dia = DIA.format(inicio);
 
         Context datos = new Context(ESPANOL);
         datos.setVariable("cliente", reserva.getCliente().getNombre());
-        datos.setVariable("confirmada", reserva.getEstado() == EstadoReserva.CONFIRMADA);
+        datos.setVariable("mensaje", mensaje);
         datos.setVariable("servicio", reserva.getServicio().getNombre());
-        datos.setVariable("dia", mayuscula(dia));
+        datos.setVariable("dia", mayuscula(DIA.format(inicio)));
         datos.setVariable("horaInicio", HORA.format(inicio));
         datos.setVariable("horaFin", HORA.format(fin));
         datos.setVariable("recurso", reserva.getRecurso().getNombre());
@@ -57,12 +87,22 @@ public class RedactorEmailReserva {
         datos.setVariable("negocio", negocio.getNombre());
         datos.setVariable("direccion", negocio.getDireccion());
         datos.setVariable("telefono", negocio.getTelefono());
-        datos.setVariable("enlace", props.frontendUrl().replaceAll("/+$", "") + "/reserva/" + token);
+        datos.setVariable("enlace", enlace);
+        datos.setVariable("pie", pie);
 
-        String asunto = "Tu cita en " + negocio.getNombre() + ": " + dia + ", " + HORA.format(inicio);
         return new EmailReserva(reserva.getCliente().getEmail(), asunto,
-                plantillas.process("reserva-confirmada-texto", datos),
-                plantillas.process("reserva-confirmada", datos));
+                plantillas.process("reserva-texto", datos),
+                plantillas.process("reserva", datos));
+    }
+
+    /** "lunes 9 de noviembre, 10:00" en la zona del negocio. */
+    private static String cuando(Reserva reserva) {
+        ZonedDateTime inicio = reserva.getInicio().atZone(ZoneId.of(reserva.getNegocio().getZonaHoraria()));
+        return DIA.format(inicio) + ", " + HORA.format(inicio);
+    }
+
+    private String enlace(String token) {
+        return props.frontendUrl().replaceAll("/+$", "") + "/reserva/" + token;
     }
 
     private static String euros(int centimos) {

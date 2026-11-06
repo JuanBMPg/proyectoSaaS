@@ -69,6 +69,19 @@ class RedactorEmailReservaTest {
                 .doesNotContain("<b>Juan</b>");
     }
 
+    @Test
+    void elRecordatorioNoLlevaEnlaceYExplicaComoCancelar() {
+        EmailReserva email = redactor.recordatorio(reserva("Juan", EstadoReserva.CONFIRMADA));
+
+        assertThat(email.asunto()).isEqualTo("Recordatorio: tu cita en Peluquería Lola lunes 9 de noviembre, 10:00");
+        assertThat(email.texto())
+                .contains("Te recordamos tu cita.")
+                .contains("Lunes 9 de noviembre · 10:00 – 10:30")
+                .contains("cancélala desde el enlace del email de confirmación")
+                .doesNotContain("Ver tu reserva");
+        assertThat(email.html()).doesNotContain("Ver mi reserva");
+    }
+
     private static Reserva reserva(String nombreCliente, EstadoReserva estado) {
         Negocio negocio = new Negocio("Peluquería Lola", "peluqueria-lola", CREADA);
         // Negocio aún no tiene método para editar la dirección (llegará con PUT /api/panel/negocio)

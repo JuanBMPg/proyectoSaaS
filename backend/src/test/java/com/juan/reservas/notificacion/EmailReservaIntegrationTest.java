@@ -37,9 +37,9 @@ import com.juan.reservas.comun.TokenSecreto;
 import com.juan.reservas.reserva.ReservaCreada;
 
 /**
- * El email de confirmación de punta a punta: la reserva se crea por HTTP y se comprueba en
- * Mailpit (contenedor real) qué ha llegado. El envío es asíncrono, así que se espera con
- * Awaitility en lugar de dormir un tiempo fijo.
+ * El email de confirmación de punta a punta: la reserva se crea por HTTP, el email pasa por la
+ * cola (outbox) y se comprueba en Mailpit (contenedor real) qué ha llegado. La cola se vacía
+ * cada medio segundo en los tests, así que se espera con Awaitility en lugar de dormir.
  */
 @TestDeIntegracion
 class EmailReservaIntegrationTest {
@@ -86,8 +86,9 @@ class EmailReservaIntegrationTest {
     }
 
     /**
-     * Prueba directa de AFTER_COMMIT: el evento de una reserva real se publica dentro de una
-     * transacción que se deshace. El listener no debe actuar, así que no llega un segundo email.
+     * Prueba directa del outbox: el evento de una reserva real se publica dentro de una
+     * transacción que se deshace. El email que el listener deja en la cola se deshace con ella,
+     * así que no llega un segundo email.
      */
     @Test
     void siLaTransaccionSeDeshaceNoSeEnviaEmail(@Autowired ApplicationEventPublisher eventos,
@@ -108,6 +109,22 @@ class EmailReservaIntegrationTest {
 
         await().during(Duration.ofSeconds(2)).atMost(Duration.ofSeconds(3))
                 .until(() -> emailsPara(email).size() == 1);
+    }
+
+    @Test
+    void trasEnviarseLaColaYaNoGuardaElEnlaceSecreto(@Autowired JdbcTemplate jdbc) throws Exception {
+        String respuesta = reservar(instante(fecha, "10:00"), unico("limpio"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        UUID reservaId = jdbc.queryForObject("SELECT id FROM reserva WHERE token_cancelacion = ?",
+                UUID.class, TokenSecreto.hash(JsonPath.read(respuesta, "$.token")));
+
+        await().atMost(Duration.ofSeconds(10)).until(() -> "ENVIADO".equals(jdbc.queryForObject(
+                "SELECT estado FROM email_pendiente WHERE reserva_id = ?", String.class, reservaId)));
+
+        Integer conCuerpo = jdbc.queryForObject("SELECT count(*) FROM email_pendiente "
+                + "WHERE reserva_id = ? AND (texto IS NOT NULL OR html IS NOT NULL)", Integer.class, reservaId);
+        assertThat(conCuerpo).isZero();
     }
 
     /** La reserva rechazada falla en el INSERT, antes de publicar el evento: no hay email. */

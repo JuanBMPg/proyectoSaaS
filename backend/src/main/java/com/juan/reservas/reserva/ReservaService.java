@@ -133,7 +133,8 @@ public class ReservaService {
         // aparecer más tarde al confirmar la transacción
         repository.saveAndFlush(reserva);
 
-        // Aviso para el email de confirmación: el listener solo actúa si la transacción se confirma
+        // Aviso para el email de confirmación: el listener lo deja en la cola (outbox) dentro de
+        // esta misma transacción, así que se guarda solo si la reserva se guarda
         eventos.publishEvent(new ReservaCreada(reserva.getId(), token));
         return new ReservaRegistrada(reserva, token);
     }

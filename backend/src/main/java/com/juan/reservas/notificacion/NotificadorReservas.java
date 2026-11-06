@@ -1,70 +1,48 @@
 package com.juan.reservas.notificacion;
 
-import java.io.UnsupportedEncodingException;
-import java.util.UUID;
+import java.time.Clock;
+import java.time.Instant;
 
-import org.springframework.mail.MailPreparationException;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.juan.reservas.comun.NoEncontradoException;
-import com.juan.reservas.config.AppProperties;
 import com.juan.reservas.negocio.Negocio;
 import com.juan.reservas.reserva.Reserva;
-import com.juan.reservas.reserva.ReservaRepository;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-
-/** Envía los emails a los clientes con Spring Mail (en local, al Mailpit del docker-compose). */
+/**
+ * Redacta los emails de una reserva y los deja en la cola (outbox). No envía nada: eso lo hace
+ * {@link EnviadorEmails}.
+ * <p>
+ * {@code Propagation.MANDATORY}: falla si no hay una transacción en curso. Es el contrato del
+ * outbox: el email se guarda junto con el cambio que lo provoca, o no se guarda.
+ */
 @Service
+@Transactional(propagation = Propagation.MANDATORY)
 public class NotificadorReservas {
 
-    private final JavaMailSender correo;
-    private final ReservaRepository reservaRepository;
+    private final EmailPendienteRepository cola;
     private final RedactorEmailReserva redactor;
-    private final AppProperties props;
+    private final Clock clock;
 
-    public NotificadorReservas(JavaMailSender correo, ReservaRepository reservaRepository,
-            RedactorEmailReserva redactor, AppProperties props) {
-        this.correo = correo;
-        this.reservaRepository = reservaRepository;
+    public NotificadorReservas(EmailPendienteRepository cola, RedactorEmailReserva redactor, Clock clock) {
+        this.cola = cola;
         this.redactor = redactor;
-        this.props = props;
+        this.clock = clock;
     }
 
-    /**
-     * Carga la reserva ya confirmada en la base de datos y envía su email.
-     * Transacción de solo lectura propia: se llama desde otro hilo, después del commit.
-     *
-     * @throws org.springframework.mail.MailException si el mensaje no se puede preparar o enviar
-     */
-    @Transactional(readOnly = true)
-    public void enviarConfirmacion(UUID reservaId, String token) {
-        Reserva reserva = reservaRepository.findById(reservaId)
-                .orElseThrow(() -> new NoEncontradoException("Reserva no encontrada: " + reservaId));
-        EmailReserva email = redactor.confirmacion(reserva, token);
-        correo.send(mensaje(email, reserva.getNegocio()));
+    /** @param token token en claro del enlace; solo existe en memoria al crear la reserva */
+    public void reservaCreada(Reserva reserva, String token) {
+        encolar(reserva, TipoEmail.RESERVA_CREADA, redactor.confirmacion(reserva, token));
     }
 
-    private MimeMessage mensaje(EmailReserva email, Negocio negocio) {
-        try {
-            MimeMessage mensaje = correo.createMimeMessage();
-            // multipart = true: el mensaje lleva la versión de texto y la HTML como alternativas
-            MimeMessageHelper ayudante = new MimeMessageHelper(mensaje, true, "UTF-8");
-            // Remitente técnico de la plataforma, con el nombre del negocio para que se reconozca
-            ayudante.setFrom(props.mail().from(), negocio.getNombre());
-            if (negocio.getEmail() != null) {
-                ayudante.setReplyTo(negocio.getEmail());
-            }
-            ayudante.setTo(email.para());
-            ayudante.setSubject(email.asunto());
-            ayudante.setText(email.texto(), email.html());
-            return mensaje;
-        } catch (MessagingException | UnsupportedEncodingException e) {
-            throw new MailPreparationException("No se pudo preparar el email de la reserva", e);
-        }
+    public void recordatorio(Reserva reserva) {
+        encolar(reserva, TipoEmail.RECORDATORIO, redactor.recordatorio(reserva));
+    }
+
+    private void encolar(Reserva reserva, TipoEmail tipo, EmailReserva email) {
+        Negocio negocio = reserva.getNegocio();
+        cola.save(new EmailPendiente(negocio.getId(), reserva.getId(), tipo, negocio.getNombre(),
+                negocio.getEmail(), email, Instant.now(clock)));
     }
 }

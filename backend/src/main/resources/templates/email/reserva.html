@@ -12,13 +12,7 @@
       <td style="padding:28px 24px;">
         <p style="margin:0 0 16px; font-size:16px;">Hola, <span th:text="${cliente}">Juan</span>:</p>
 
-        <p th:if="${confirmada}" style="margin:0 0 20px; font-size:16px;">
-          Tu cita está <strong>confirmada</strong>.
-        </p>
-        <p th:unless="${confirmada}" style="margin:0 0 20px; font-size:16px;">
-          Hemos recibido tu solicitud. <strong th:text="${negocio}">El negocio</strong> la confirmará
-          y te avisaremos.
-        </p>
+        <p style="margin:0 0 20px; font-size:16px;" th:text="${mensaje}">Tu cita está confirmada.</p>
 
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#dcefe8; border-radius:8px;">
           <tr>
@@ -31,15 +25,15 @@
           </tr>
         </table>
 
-        <p style="margin:24px 0;">
+        <p th:if="${enlace}" style="margin:24px 0 0;">
           <a th:href="${enlace}" href="#"
              style="display:inline-block; background:#23695a; color:#ffffff; text-decoration:none; padding:11px 20px; border-radius:6px; font-weight:bold;">
             Ver mi reserva
           </a>
         </p>
 
-        <p style="margin:0; font-size:13px; color:#5b6862;">
-          Guarda este email: el enlace es la forma de consultar tu cita.
+        <p style="margin:24px 0 0; font-size:13px; color:#5b6862;">
+          <span th:if="${pie}" th:text="${pie}">Guarda este email: el enlace es la forma de consultar tu cita.</span>
           <span th:if="${telefono}" th:text="|Si necesitas algo, llama a ${negocio} al ${telefono}.|"></span>
         </p>
       </td>
