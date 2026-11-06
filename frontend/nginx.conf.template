@@ -1,6 +1,7 @@
 # Sirve la aplicación Angular y hace de proxy de la API.
 # El navegador ve frontend y API en el mismo origen: la cookie SameSite=Strict del refresh
 # token funciona y no hace falta CORS. ${BACKEND_URL} se sustituye al arrancar el contenedor.
+
 server {
     listen 80;
     root /usr/share/nginx/html;
@@ -9,17 +10,25 @@ server {
     gzip on;
     gzip_types text/css application/javascript application/json image/svg+xml;
 
+    # El backend tiene que ver la misma dirección que el navegador. Spring compara la cabecera
+    # Origin de cada POST/PUT/DELETE con el esquema, el host y el PUERTO de la petición: si no
+    # coinciden, la trata como de otro origen y, como no está en CORS_ALLOWED_ORIGINS, responde 403.
+    #  - Host lleva $http_host (con el puerto, p. ej. localhost:8081) y no $host (sin él).
+    #  - X-Forwarded-Proto solo se reenvía si ya venía del proxy HTTPS de la plataforma de hosting
+    #    (si falta, la cabecera no se envía). En local no viene: Tomcat usa el esquema y el puerto
+    #    reales. Enviar "http" a mano haría que Tomcat supusiera el puerto 80 y perdiera el 8081.
     location /api/ {
         proxy_pass ${BACKEND_URL};
-        proxy_set_header Host $host;
+        proxy_set_header Host $http_host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
     }
 
     # Documentación de la API (Swagger UI) también accesible desde la misma dirección
     location ~ ^/(swagger-ui|v3/api-docs) {
         proxy_pass ${BACKEND_URL};
-        proxy_set_header Host $host;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
     }
 
     # Ficheros con hash en el nombre: se pueden guardar en caché para siempre
