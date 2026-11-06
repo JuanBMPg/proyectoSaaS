@@ -51,6 +51,13 @@ app:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
   mail:
     from: ${MAIL_FROM:no-responder@reservas.local}
+  # Cola de emails (outbox): cada cuánto se envían los pendientes
+  emails:
+    intervalo: PT10S
+  # Recordatorio de las citas confirmadas, con esta antelación
+  recordatorios:
+    antelacion: PT24H
+    intervalo: PT5M
   auth:
     # Vacío por defecto: la validación de AuthProperties impide arrancar sin JWT_SECRET
     jwt-secret: ${JWT_SECRET:}

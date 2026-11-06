@@ -42,7 +42,7 @@ Es un proyecto personal de portfolio y está en desarrollo.
 │       ├── disponibilidad/  # CalculadoraDisponibilidad y HorarioDelDia (lógica pura) y su carga de datos
 │       ├── excepcion/       # Vacaciones, festivos y horarios especiales
 │       ├── publico/         # Endpoints de la página pública
-│       ├── notificacion/    # Email de confirmación (plantillas Thymeleaf)
+│       ├── notificacion/    # Emails: plantillas Thymeleaf, cola (outbox) y recordatorios
 │       ├── demo/            # Negocio de demostración (opcional, DEMO=true)
 │       ├── config/ comun/   # Seguridad, CORS, OpenAPI, Clock; errores y utilidades
 │       └── ../resources/db/migration/   # Migraciones Flyway
@@ -147,7 +147,7 @@ Las dos imágenes están listas para cualquier servicio que ejecute contenedores
 
 **Fase 2: automatización** (en curso)
 - [x] Excepciones: vacaciones, festivos y horarios especiales
-- [ ] Recordatorios automáticos 24 h antes con tarea programada
+- [x] Recordatorios automáticos 24 h antes con tarea programada (y emails con patrón outbox)
 - [ ] Cancelación por enlace respetando el plazo
 - [ ] Confirmación manual para negocios que la activen
 - [ ] Tests e2e con Playwright del flujo de reserva
@@ -174,8 +174,13 @@ Después vienen la fase 3 (pagos, estadísticas, plantillas de sector) y la fase
 - **Tiempo testeable.** Se inyecta un `java.time.Clock` en lugar de llamar a `Instant.now()`.
 - **Sesión segura.** El access token (JWT de 15 min) vive solo en memoria en el frontend; el refresh token
   (7 días, rotado en cada uso y guardado como hash) viaja en una cookie `HttpOnly; SameSite=Strict`.
-- **Emails solo de reservas que existen.** El email de confirmación lo envía un `@TransactionalEventListener`
-  en fase `AFTER_COMMIT` y `@Async`: si la reserva no llega a guardarse no sale ningún correo, y el cliente no
-  espera al servidor de correo. En local los emails se ven en Mailpit (http://localhost:8025).
+- **Emails con patrón outbox.** El email ya redactado se guarda en la tabla `email_pendiente` dentro de la
+  misma transacción que la reserva: si la reserva no llega a guardarse, tampoco el email, y si la aplicación se
+  cae antes de enviarlo, sigue en la cola. Una tarea `@Scheduled` lo envía con `FOR UPDATE SKIP LOCKED` (dos
+  instancias no se pisan) y, si el servidor de correo falla, reintenta esperando cada vez el doble. Al enviarse
+  se vacía el cuerpo, que lleva el enlace secreto. En local los emails se ven en Mailpit (http://localhost:8025).
+- **Recordatorios 24 h antes.** Otra tarea programada encola el recordatorio de las citas confirmadas que
+  empiezan en las próximas 24 horas (salvo las reservadas con menos antelación). Un índice único parcial
+  garantiza un solo recordatorio por reserva.
 - **Configuración sin secretos.** Todo llega por variables de entorno; `.env` está en `.gitignore`
   y `.env.example` documenta las variables.

@@ -3,3 +3,9 @@
 app:
   auth:
     jwt-secret: secreto-solo-para-tests-de-integracion-0123456789
+  # La cola de emails se vacía cada medio segundo para que los tests no esperen
+  emails:
+    intervalo: PT0.5S
+  # Los tests de recordatorios llaman a programar() con su propio "ahora"
+  recordatorios:
+    intervalo: PT1H

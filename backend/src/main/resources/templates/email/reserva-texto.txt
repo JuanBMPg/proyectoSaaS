@@ -1,13 +1,13 @@
 Hola, [(${cliente})]:
 
-[# th:if="${confirmada}"]Tu cita está confirmada.[/][# th:unless="${confirmada}"]Hemos recibido tu solicitud. [(${negocio})] la confirmará y te avisaremos.[/]
+[(${mensaje})]
 
 [(${servicio})]
 [(${dia})] · [(${horaInicio})] – [(${horaFin})]
 Con [(${recurso})] · [(${precio})]
 [(${negocio})][# th:if="${direccion}"] · [(${direccion})][/]
-
+[# th:if="${enlace}"]
 Ver tu reserva: [(${enlace})]
-
-Guarda este email: el enlace es la forma de consultar tu cita.[# th:if="${telefono}"]
+[/][# th:if="${pie}"]
+[(${pie})][/][# th:if="${telefono}"]
 Si necesitas algo, llama a [(${negocio})] al [(${telefono})].[/]
