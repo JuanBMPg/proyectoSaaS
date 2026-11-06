@@ -206,3 +206,34 @@ export interface EmpleadoRequest {
   password: string;
   recursoId: string;
 }
+
+/**
+ * Excepción del horario: vacaciones, festivo u horario especial. Fechas "YYYY-MM-DD" y
+ * horas "HH:mm" locales del negocio; sin horas es un cierre.
+ */
+export interface Excepcion {
+  id: string;
+  /** null: todo el negocio. */
+  recurso: { id: string; nombre: string } | null;
+  fechaInicio: string;
+  /** Incluida. */
+  fechaFin: string;
+  horaInicio: string | null;
+  horaFin: string | null;
+  motivo: string;
+}
+
+export interface ExcepcionRequest {
+  recursoId: string | null;
+  fechaInicio: string;
+  fechaFin: string;
+  horaInicio: string | null;
+  horaFin: string | null;
+  motivo: string;
+}
+
+export interface ExcepcionCreada {
+  excepcion: Excepcion;
+  /** Reservas pendientes o confirmadas de los afectados en esos días (no se cancelan solas). */
+  reservasActivas: number;
+}

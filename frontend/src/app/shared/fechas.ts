@@ -41,3 +41,16 @@ export function fechaLargaEnZona(instante: string, zona: string): string {
 export function esPorLaManana(instante: string, zona: string): boolean {
   return horaEnZona(instante, zona) < '14:00';
 }
+
+/**
+ * "lun, 12 oct" a partir de una fecha de calendario "YYYY-MM-DD". Se construye con la hora
+ * local del navegador y sin zona: es un día del calendario, no un instante.
+ */
+export function fechaCorta(fechaIsoTexto: string): string {
+  const [anio, mes, dia] = fechaIsoTexto.split('-').map(Number);
+  return new Intl.DateTimeFormat('es-ES', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  }).format(new Date(anio, mes - 1, dia));
+}

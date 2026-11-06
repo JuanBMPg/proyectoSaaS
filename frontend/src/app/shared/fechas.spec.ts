@@ -1,4 +1,4 @@
-import { esPorLaManana, fechaIso, fechaLargaEnZona, horaEnZona } from './fechas';
+import { esPorLaManana, fechaCorta, fechaIso, fechaLargaEnZona, horaEnZona } from './fechas';
 
 describe('fechas y horas', () => {
   it('fechaIso usa el día del calendario, también de madrugada', () => {
@@ -27,5 +27,12 @@ describe('fechas y horas', () => {
   it('separa la mañana de la tarde a las 14:00 del negocio', () => {
     expect(esPorLaManana('2026-06-02T11:45:00Z', 'Europe/Madrid')).toBe(true); // 13:45
     expect(esPorLaManana('2026-06-02T12:00:00Z', 'Europe/Madrid')).toBe(false); // 14:00
+  });
+});
+
+describe('fechaCorta', () => {
+  it('escribe un día del calendario sin desplazarlo por la zona del navegador', () => {
+    expect(fechaCorta('2026-12-24')).toBe('jue, 24 dic');
+    expect(fechaCorta('2026-01-01')).toBe('jue, 1 ene');
   });
 });

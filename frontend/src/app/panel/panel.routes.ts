@@ -33,6 +33,12 @@ export const panelRoutes: Routes = [
     loadComponent: () => import('./recursos/recursos').then((m) => m.Recursos),
   },
   {
+    path: 'excepciones',
+    title: 'Vacaciones y festivos · Reservas',
+    canActivate: [propietarioGuard],
+    loadComponent: () => import('./excepciones/excepciones').then((m) => m.Excepciones),
+  },
+  {
     path: 'recursos/:id/horario',
     title: 'Horario · Reservas',
     canActivate: [propietarioGuard],
