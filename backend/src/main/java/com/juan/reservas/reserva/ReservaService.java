@@ -168,8 +168,9 @@ public class ReservaService {
                     + describir(Duration.ofHours(negocio.getPlazoCancelacionHoras())) + " antes." + llamar);
         }
 
+        boolean eraSolicitud = reserva.getEstado() == EstadoReserva.PENDIENTE;
         reserva.cambiarEstado(EstadoReserva.CANCELADA);
-        eventos.publishEvent(new ReservaCancelada(reserva.getId(), true));
+        eventos.publishEvent(new ReservaCancelada(reserva.getId(), true, eraSolicitud));
         return aDto(reserva, ahora);
     }
 

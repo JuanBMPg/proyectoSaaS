@@ -19,6 +19,11 @@ export class AgendaApiService {
     return this.http.get<ReservaPanel[]>(RUTA, { params });
   }
 
+  /** Solicitudes por confirmar que aún no han empezado (las del empleado, si lo es). */
+  pendientes(): Observable<ReservaPanel[]> {
+    return this.http.get<ReservaPanel[]>(`${RUTA}/pendientes`);
+  }
+
   crear(datos: ReservaManualRequest): Observable<ReservaPanel> {
     return this.http.post<ReservaPanel>(RUTA, datos);
   }

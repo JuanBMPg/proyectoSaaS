@@ -1,0 +1,34 @@
+@if (solicitudes().length > 0) {
+  <section class="solicitudes" aria-labelledby="titulo-solicitudes">
+    <h2 id="titulo-solicitudes">Solicitudes por confirmar ({{ solicitudes().length }})</h2>
+    <ul>
+      @for (reserva of solicitudes(); track reserva.id) {
+        <li class="solicitud">
+          <div class="datos">
+            <strong>{{ reserva.cliente.nombre }}</strong>
+            <span>{{ reserva.servicio.nombre }} con {{ reserva.recurso.nombre }}</span>
+            <span class="cuando">{{ cuando(reserva) }}</span>
+          </div>
+          <div class="botones">
+            <button
+              mat-flat-button
+              type="button"
+              [disabled]="guardando() === reserva.id"
+              (click)="decidir(reserva, 'CONFIRMADA')"
+            >
+              Confirmar
+            </button>
+            <button
+              mat-button
+              type="button"
+              [disabled]="guardando() === reserva.id"
+              (click)="decidir(reserva, 'CANCELADA')"
+            >
+              Rechazar
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+  </section>
+}

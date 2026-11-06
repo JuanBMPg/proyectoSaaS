@@ -37,6 +37,9 @@ export interface Negocio {
   confirmacionAutomatica: boolean;
 }
 
+/** Lo que el propietario puede cambiar en Ajustes (ni el slug ni la zona horaria). */
+export type NegocioRequest = Omit<Negocio, 'id' | 'slug' | 'zonaHoraria'>;
+
 /** Formato de error del backend (RFC 9457), con los errores por campo en las respuestas 400. */
 export interface ProblemDetail {
   title?: string;

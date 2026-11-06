@@ -8,11 +8,12 @@ import java.util.UUID;
 import com.juan.reservas.comun.NoEncontradoException;
 import com.juan.reservas.reserva.Reserva;
 import com.juan.reservas.reserva.ReservaCancelada;
+import com.juan.reservas.reserva.ReservaConfirmada;
 import com.juan.reservas.reserva.ReservaCreada;
 import com.juan.reservas.reserva.ReservaRepository;
 
 /**
- * Deja en la cola los emails de los eventos de una reserva: creada o cancelada.
+ * Deja en la cola los emails de los eventos de una reserva: creada, confirmada o cancelada.
  * <p>
  * Es un {@code @EventListener} normal: se ejecuta en el mismo hilo y DENTRO de la transacción
  * que crea la reserva. Si la reserva se guarda, su email también; si hay un rollback (por
@@ -38,7 +39,12 @@ public class EmailReservaListener {
 
     @EventListener
     public void alCancelarReserva(ReservaCancelada evento) {
-        notificador.cancelacion(reserva(evento.reservaId()), evento.porCliente());
+        notificador.cancelacion(reserva(evento.reservaId()), evento.porCliente(), evento.eraSolicitud());
+    }
+
+    @EventListener
+    public void alConfirmarReserva(ReservaConfirmada evento) {
+        notificador.confirmadaPorNegocio(reserva(evento.reservaId()));
     }
 
     /** Dentro de la misma transacción: la reserva ya está en el contexto de persistencia. */

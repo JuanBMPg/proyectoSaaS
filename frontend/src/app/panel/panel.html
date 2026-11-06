@@ -79,6 +79,17 @@
           <mat-icon matListItemIcon>badge</mat-icon>
           <span matListItemTitle>Empleados</span>
         </a>
+        <a
+          mat-list-item
+          routerLink="/panel/ajustes"
+          routerLinkActive
+          #ajustes="routerLinkActive"
+          [activated]="ajustes.isActive"
+          (click)="movil() && menu.close()"
+        >
+          <mat-icon matListItemIcon>settings</mat-icon>
+          <span matListItemTitle>Ajustes</span>
+        </a>
       }
     </mat-nav-list>
   </mat-sidenav>

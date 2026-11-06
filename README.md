@@ -149,7 +149,7 @@ Las dos imágenes están listas para cualquier servicio que ejecute contenedores
 - [x] Excepciones: vacaciones, festivos y horarios especiales
 - [x] Recordatorios automáticos 24 h antes con tarea programada (y emails con patrón outbox)
 - [x] Cancelación por enlace respetando el plazo
-- [ ] Confirmación manual para negocios que la activen
+- [x] Confirmación manual para negocios que la activen (y ajustes del negocio en el panel)
 - [ ] Tests e2e con Playwright del flujo de reserva
 
 Después vienen la fase 3 (pagos, estadísticas, plantillas de sector) y la fase 4 (widget, iCal, lista de espera).

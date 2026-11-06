@@ -66,6 +66,19 @@ public class Negocio extends EntidadBase {
         this.creadoEn = creadoEn;
     }
 
+    /** Datos y reglas editables desde Ajustes (ver {@link NegocioRequest}). */
+    public void actualizar(String nombre, String email, String telefono, String direccion, String etiquetaRecurso,
+            int antelacionMinimaMin, int antelacionMaximaDias, int plazoCancelacionHoras,
+            boolean confirmacionAutomatica) {
+        this.nombre = nombre;
+        actualizarContacto(email, telefono, direccion);
+        this.etiquetaRecurso = etiquetaRecurso;
+        this.antelacionMinimaMin = antelacionMinimaMin;
+        this.antelacionMaximaDias = antelacionMaximaDias;
+        this.plazoCancelacionHoras = plazoCancelacionHoras;
+        this.confirmacionAutomatica = confirmacionAutomatica;
+    }
+
     /** Datos de contacto que se muestran en la página pública y en los emails. */
     public void actualizarContacto(String email, String telefono, String direccion) {
         this.email = email;

@@ -8,8 +8,11 @@
   <a mat-flat-button routerLink="/panel/servicios">Servicios</a>
   <a mat-button routerLink="/panel/recursos">Recursos</a>
   <a mat-button routerLink="/panel/agenda">Ver la agenda</a>
+  <a mat-button routerLink="/panel/ajustes">Ajustes</a>
 } @else if (rol() === 'EMPLEADO') {
   <h1>Bienvenido</h1>
   <p>Tus citas están en la agenda.</p>
   <a mat-flat-button routerLink="/panel/agenda">Ver mi agenda</a>
 }
+
+<app-solicitudes-pendientes />

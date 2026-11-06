@@ -40,8 +40,12 @@ public class NotificadorReservas {
         encolar(reserva, TipoEmail.RECORDATORIO, redactor.recordatorio(reserva));
     }
 
-    public void cancelacion(Reserva reserva, boolean porCliente) {
-        encolar(reserva, TipoEmail.RESERVA_CANCELADA, redactor.cancelacion(reserva, porCliente));
+    public void cancelacion(Reserva reserva, boolean porCliente, boolean eraSolicitud) {
+        encolar(reserva, TipoEmail.RESERVA_CANCELADA, redactor.cancelacion(reserva, porCliente, eraSolicitud));
+    }
+
+    public void confirmadaPorNegocio(Reserva reserva) {
+        encolar(reserva, TipoEmail.RESERVA_CONFIRMADA, redactor.confirmadaPorNegocio(reserva));
     }
 
     private void encolar(Reserva reserva, TipoEmail tipo, EmailReserva email) {
