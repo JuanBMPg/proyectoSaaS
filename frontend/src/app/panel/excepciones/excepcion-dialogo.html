@@ -1,0 +1,73 @@
+<h2 mat-dialog-title>Nueva excepción</h2>
+
+<form [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+  <mat-dialog-content class="campos">
+    @if (error(); as mensaje) {
+      <p class="error" role="alert">{{ mensaje }}</p>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Afecta a</mat-label>
+      <mat-select formControlName="recursoId">
+        <mat-option [value]="TODO_EL_NEGOCIO">Todo el negocio</mat-option>
+        @for (recurso of datos.recursos; track recurso.id) {
+          <mat-option [value]="recurso.id">{{ recurso.nombre }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Días</mat-label>
+      <mat-date-range-input [rangePicker]="selector">
+        <input matStartDate formControlName="fechaInicio" placeholder="Desde" />
+        <input matEndDate formControlName="fechaFin" placeholder="Hasta" />
+      </mat-date-range-input>
+      <mat-datepicker-toggle matIconSuffix [for]="selector" />
+      <mat-date-range-picker #selector />
+      <mat-hint>Para un solo día, elige el mismo día dos veces</mat-hint>
+      @if (
+        formulario.controls.fechaInicio.hasError('required') ||
+        formulario.controls.fechaFin.hasError('required')
+      ) {
+        <mat-error>Elige el primer y el último día</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-radio-group formControlName="tipo" class="lista-opciones" aria-label="Tipo de excepción">
+      <mat-radio-button value="cierre">Cerrado todo el día</mat-radio-button>
+      <mat-radio-button value="especial">Horario especial (sustituye al habitual)</mat-radio-button>
+    </mat-radio-group>
+
+    @if (tipo() === 'especial') {
+      <div class="fila">
+        <mat-form-field appearance="outline">
+          <mat-label>Desde las</mat-label>
+          <input matInput type="time" formControlName="horaInicio" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Hasta las</mat-label>
+          <input matInput type="time" formControlName="horaFin" />
+        </mat-form-field>
+      </div>
+      @if (formulario.touched && formulario.hasError('horasIncompletas')) {
+        <p class="error" role="alert">Indica las dos horas</p>
+      }
+      @if (formulario.hasError('horasInvertidas')) {
+        <p class="error" role="alert">La hora de inicio debe ser anterior a la de fin</p>
+      }
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Motivo</mat-label>
+      <input matInput formControlName="motivo" placeholder="Vacaciones, festivo local..." />
+      @if (formulario.controls.motivo.hasError('required')) {
+        <mat-error>Escribe el motivo</mat-error>
+      }
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close>Cancelar</button>
+    <button mat-flat-button type="submit" [disabled]="guardando()">Guardar</button>
+  </mat-dialog-actions>
+</form>

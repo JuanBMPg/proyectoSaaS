@@ -59,6 +59,17 @@
         </a>
         <a
           mat-list-item
+          routerLink="/panel/excepciones"
+          routerLinkActive
+          #excepciones="routerLinkActive"
+          [activated]="excepciones.isActive"
+          (click)="movil() && menu.close()"
+        >
+          <mat-icon matListItemIcon>event_busy</mat-icon>
+          <span matListItemTitle>Vacaciones y festivos</span>
+        </a>
+        <a
+          mat-list-item
           routerLink="/panel/empleados"
           routerLinkActive
           #empleados="routerLinkActive"

@@ -145,8 +145,8 @@ Las dos imágenes están listas para cualquier servicio que ejecute contenedores
 - [x] Empleados con acceso solo a su agenda
 - [x] Datos de demo e imágenes Docker listas para desplegar (falta publicar la demo en un hosting)
 
-**Fase 2: automatización** (siguiente)
-- [ ] Excepciones: vacaciones, festivos y horarios especiales
+**Fase 2: automatización** (en curso)
+- [x] Excepciones: vacaciones, festivos y horarios especiales
 - [ ] Recordatorios automáticos 24 h antes con tarea programada
 - [ ] Cancelación por enlace respetando el plazo
 - [ ] Confirmación manual para negocios que la activen
